@@ -1,0 +1,371 @@
+# LROI PROMs Converter Configuration
+# Version: v1.4.5
+
+[defaults]
+hospital = 1234  # MANDATORY: Hospital number for all conversions
+lut_column_prefix = "__LUT__"  # Default: "__LUT__" - Prefix for LUT columns to avoid collisions
+log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
+xlsx_log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
+output_xml_file = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+
+[lut]
+join_column = "Admission ID"  # Main join column in LUT file
+# Note: Data validation is now handled through regex conversions in [PROM.*.*.value] sections
+
+# =============================================================================
+# PROM: Oxford Knee Score (OKS)
+# =============================================================================
+
+[PROM.OKS]
+detection_column = "Oxford Knee Score"
+
+[PROM.OKS.lookup]
+required = true
+join_column = "Admission ID"
+add_columns = ["Gender", "Date of Birth", "Laterality"]
+
+[PROM.OKS.UPNNUM]
+column = "Patient ID"
+
+[PROM.OKS.DATUMINVUL]
+column = "Date of Survey Completion"
+
+[PROM.OKS.GENDER]
+column = "__LUT__Gender"
+
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+
+[[PROM.OKS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+
+[PROM.OKS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.OKS.FUPK]
+column = "Grouped Phase"
+
+[[PROM.OKS.FUPK.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+
+[[PROM.OKS.FUPK.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+
+[[PROM.OKS.FUPK.value]]
+match = "6\\s*Month|6M"
+replace = "6"
+
+[[PROM.OKS.FUPK.value]]
+match = "12\\s*Month|12M|1\\s*Year"
+replace = "12"
+
+[PROM.OKS.SIDEPK]
+column = "__LUT__Laterality"
+
+[[PROM.OKS.SIDEPK.value]]
+match = "Right|R"
+replace = "1"
+
+[[PROM.OKS.SIDEPK.value]]
+match = "Left|L"
+replace = "2"
+
+[PROM.OKS.OKS1PK]
+column = "How would you describe the pain you usually have from your knee?"
+
+[PROM.OKS.OKS2PK]
+column = "Have you had any trouble with washing and drying yourself (all over) because of your knee?"
+
+[PROM.OKS.OKS3PK]
+column = "Have you had any trouble getting in and out of a car or using public transport because of your knee?"
+
+[PROM.OKS.OKS4PK]
+column = "For how long have you been able to walk before pain from your knee becomes severe?"
+
+[PROM.OKS.OKS5PK]
+column = "After a meal (sat at a table), how painful has it been for you to stand up from a chair because of your knee?"
+
+[PROM.OKS.OKS6PK]
+column = "Have you been limping when walking, because of your knee?"
+
+[PROM.OKS.OKS7PK]
+column = "Could you kneel down and get up again afterwards?"
+
+[PROM.OKS.OKS8PK]
+column = "Have you been troubled by pain from your knee in bed at night?"
+
+[PROM.OKS.OKS9PK]
+column = "How much has pain from your knee interfered with your usual work (including housework)?"
+
+[PROM.OKS.OKS10PK]
+column = "Have you felt that your knee might suddenly 'give way' or let you down?"
+
+[PROM.OKS.OKS11PK]
+column = "Could you do the household shopping on your own?"
+
+[PROM.OKS.OKS12PK]
+column = "Could you walk down one flight of stairs?"
+
+# =============================================================================
+# PROM: Oxford Hip Score (OHS)
+# =============================================================================
+
+[PROM.OHS]
+detection_column = "Oxford Hip Score Total"
+
+[PROM.OHS.lookup]
+required = true
+join_column = "Admission ID"
+add_columns = ["Gender", "Date of Birth", "Laterality"]
+
+[PROM.OHS.UPNNUM]
+column = "Patient ID"
+
+[PROM.OHS.DATUMINVUL]
+column = "Date of Survey Completion"
+
+[PROM.OHS.GENDER]
+column = "__LUT__Gender"
+
+[[PROM.OHS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+
+[[PROM.OHS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+
+[PROM.OHS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.OHS.FUPH]
+column = "Grouped Phase"
+
+[[PROM.OHS.FUPH.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+
+[[PROM.OHS.FUPH.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+
+[[PROM.OHS.FUPH.value]]
+match = "12\\s*Month|12M|1\\s*Year"
+replace = "12"
+
+[PROM.OHS.SIDEP]
+column = "__LUT__Laterality"
+
+[[PROM.OHS.SIDEP.value]]
+match = "Right|R"
+replace = "1"
+
+[[PROM.OHS.SIDEP.value]]
+match = "Left|L"
+replace = "2"
+
+[PROM.OHS.OHS1P]
+column = "OHS Q1"
+
+[PROM.OHS.OHS2P]
+column = "OHS Q2"
+
+[PROM.OHS.OHS3P]
+column = "OHS Q3"
+
+[PROM.OHS.OHS4P]
+column = "OHS Q4"
+
+[PROM.OHS.OHS5P]
+column = "OHS Q5"
+
+[PROM.OHS.OHS6P]
+column = "OHS Q6"
+
+[PROM.OHS.OHS7P]
+column = "OHS Q7"
+
+[PROM.OHS.OHS8P]
+column = "OHS Q8"
+
+[PROM.OHS.OHS9P]
+column = "OHS Q9"
+
+[PROM.OHS.OHS10P]
+column = "OHS Q10"
+
+[PROM.OHS.OHS11P]
+column = "OHS Q11"
+
+[PROM.OHS.OHS12P]
+column = "OHS Q12"
+
+# =============================================================================
+# PROM: Hip Disability and Osteoarthritis Outcome Score (HOOS)
+# =============================================================================
+
+[PROM.HOOS]
+detection_column = "1. Going up or down stairs"  # Unique to HOOS/KOOS in the example files
+
+[PROM.HOOS.lookup]
+required = true
+join_column = "Admission ID"
+add_columns = ["Date of Birth", "Laterality"]
+
+[PROM.HOOS.UPNNUM]
+column = "Patient ID"
+
+[PROM.HOOS.DATUMINVUL]
+column = "Date of Survey Completion"
+
+[PROM.HOOS.HOSPITAL]
+# Set via CLI --hospital or config defaults.hospital
+
+[PROM.HOOS.GENDER]
+column = "__LUT__Gender"  # Must come from LUT via Demographics  # Will need to come from LUT
+[[PROM.HOOS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+flags = "i"
+[[PROM.HOOS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+flags = "i"
+
+[PROM.HOOS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.HOOS.FUPH]
+column = "Period"
+[[PROM.HOOS.FUPH.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+flags = "i"
+[[PROM.HOOS.FUPH.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+flags = "i"
+[[PROM.HOOS.FUPH.value]]
+match = "6\\s*Month|6M"
+replace = "6"
+flags = "i"
+[[PROM.HOOS.FUPH.value]]
+match = "12\\s*Month|12M|1\\s*Year"
+replace = "12"
+flags = "i"
+
+[PROM.HOOS.SIDEP]
+column = "__LUT__Laterality"
+[[PROM.HOOS.SIDEP.value]]
+match = "Right|R"
+replace = "1"
+flags = "i"
+[[PROM.HOOS.SIDEP.value]]
+match = "Left|L"
+replace = "2"
+flags = "i"
+
+[PROM.HOOS.HOOS16P]
+column = "1. Going up or down stairs"
+
+[PROM.HOOS.HOOS28P]
+column = "2. Walking on an uneven surface"
+
+[PROM.HOOS.HOOS29P]
+column = "3. Rising from sitting"
+
+[PROM.HOOS.HOOS34P]
+column = "4. Bending to floor/pick up an object"
+
+[PROM.HOOS.HOOS35P]
+column = "5. Lying in bed (turning over, maintaining hip position)"
+
+# =============================================================================
+# PROM: Knee Injury and Osteoarthritis Outcome Score (KOOS)
+# =============================================================================
+
+[PROM.KOOS]
+detection_column = "1. How severe is your knee stiffness after first wakening in the morning?"
+
+[PROM.KOOS.lookup]
+required = true
+join_column = "Admission ID"
+add_columns = ["Date of Birth", "Laterality"]
+
+[PROM.KOOS.UPNNUM]
+column = "Patient ID"
+
+[PROM.KOOS.DATUMINVUL]
+column = "Date of Survey Completion"
+
+[PROM.KOOS.HOSPITAL]
+# Set via CLI --hospital or config defaults.hospital
+
+[PROM.KOOS.GENDER]
+column = "__LUT__Gender"  # Must come from LUT via Demographics  # Will need to come from LUT
+[[PROM.KOOS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+flags = "i"
+[[PROM.KOOS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+flags = "i"
+
+[PROM.KOOS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.KOOS.FUPK]
+column = "Period"
+[[PROM.KOOS.FUPK.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+flags = "i"
+[[PROM.KOOS.FUPK.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+flags = "i"
+[[PROM.KOOS.FUPK.value]]
+match = "6\\s*Month|6M"
+replace = "6"
+flags = "i"
+[[PROM.KOOS.FUPK.value]]
+match = "12\\s*Month|12M|1\\s*Year"
+replace = "12"
+flags = "i"
+
+[PROM.KOOS.SIDEPK]
+column = "__LUT__Laterality"
+[[PROM.KOOS.SIDEPK.value]]
+match = "Right|R"
+replace = "1"
+flags = "i"
+[[PROM.KOOS.SIDEPK.value]]
+match = "Left|L"
+replace = "2"
+flags = "i"
+
+[PROM.KOOS.KOOS26P]
+column = "1. How severe is your knee stiffness after first wakening in the morning?"
+
+[PROM.KOOS.KOOS25P]
+column = "2. Twisting/pivoting on your knee"
+
+[PROM.KOOS.KOOS19P]
+column = "3. Straightening knee fully"
+
+[PROM.KOOS.KOOS21P]
+column = "4. Going up or down stairs"
+
+[PROM.KOOS.KOOS09P]
+column = "5. Standing upright"
+
+[PROM.KOOS.KOOS38P]
+column = "6. Rising from sitting"
+
+[PROM.KOOS.KOOS34P]
+column = "7. Bending to floor/pick up an object"

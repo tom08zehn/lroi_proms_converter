@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="LROIPROM">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="questionaires"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="questionaires">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" ref="questionaire"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="questionaire">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="DATUMINVUL"/>
+                <xs:element maxOccurs="1" ref="HOSPITAL"/>
+                <xs:element minOccurs="1" ref="UPNNUM"/>
+                <xs:element ref="GENDER"/>
+                <xs:element ref="DATBIRTH"/>
+                <xs:choice>
+                    <!-- schouder -->
+                    <xs:sequence>
+                        <xs:element ref="FUPS" minOccurs="1"/>
+                        <xs:element ref="SIDES" minOccurs="1"/>
+                        <xs:element ref="PIJNRUSTS" minOccurs="0"/>
+                        <xs:element ref="PIJNACTS" minOccurs="0"/>
+                        <xs:element ref="EQ5D01S" minOccurs="0"/>
+                        <xs:element ref="EQ5D02S" minOccurs="0"/>
+                        <xs:element ref="EQ5D03S" minOccurs="0"/>
+                        <xs:element ref="EQ5D04S" minOccurs="0"/>
+                        <xs:element ref="EQ5D05S" minOccurs="0"/>
+                        <xs:element ref="EQ5D06S" minOccurs="0"/>
+                        <xs:element ref="EQ5D01S5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D02S5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D03S5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D04S5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D05S5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D06S5L" minOccurs="0"/>
+                        <xs:element ref="OSS1" minOccurs="0"/>
+                        <xs:element ref="OSS2" minOccurs="0"/>
+                        <xs:element ref="OSS3" minOccurs="0"/>
+                        <xs:element ref="OSS4" minOccurs="0"/>
+                        <xs:element ref="OSS5" minOccurs="0"/>
+                        <xs:element ref="OSS6" minOccurs="0"/>
+                        <xs:element ref="OSS7" minOccurs="0"/>
+                        <xs:element ref="OSS8" minOccurs="0"/>
+                        <xs:element ref="OSS9" minOccurs="0"/>
+                        <xs:element ref="OSS10" minOccurs="0"/>
+                        <xs:element ref="OSS11" minOccurs="0"/>
+                        <xs:element ref="OSS12" minOccurs="0"/>
+                        <xs:element ref="AANBEVELINGS" minOccurs="0"/>
+                        <xs:element ref="ANKERPS" minOccurs="0"/>
+                        <xs:element ref="ANKERP2S" minOccurs="0"/>
+                    </xs:sequence>
+                    <!-- heup -->
+                    <xs:sequence>
+                        <xs:element ref="FUPH" minOccurs="1"/>
+                        <xs:element ref="SIDEP" minOccurs="1"/>
+                        <xs:element ref="PIJNRUSTP" minOccurs="0"/>
+                        <xs:element ref="PIJNACTP" minOccurs="0"/>
+                        <xs:element ref="HOOS16P" minOccurs="0"/>
+                        <xs:element ref="HOOS28P" minOccurs="0"/>
+                        <xs:element ref="HOOS29P" minOccurs="0"/>
+                        <xs:element ref="HOOS34P" minOccurs="0"/>
+                        <xs:element ref="HOOS35P" minOccurs="0"/>
+                        <xs:element ref="EQ5D01P" minOccurs="0"/>
+                        <xs:element ref="EQ5D02P" minOccurs="0"/>
+                        <xs:element ref="EQ5D03P" minOccurs="0"/>
+                        <xs:element ref="EQ5D04P" minOccurs="0"/>
+                        <xs:element ref="EQ5D05P" minOccurs="0"/>
+                        <xs:element ref="EQ5D06P" minOccurs="0"/>
+                        <xs:element ref="EQ5D01P5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D02P5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D03P5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D04P5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D05P5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D06P5L" minOccurs="0"/>
+                        <xs:element ref="OHS1P" minOccurs="0"/>
+                        <xs:element ref="OHS2P" minOccurs="0"/>
+                        <xs:element ref="OHS3P" minOccurs="0"/>
+                        <xs:element ref="OHS4P" minOccurs="0"/>
+                        <xs:element ref="OHS5P" minOccurs="0"/>
+                        <xs:element ref="OHS6P" minOccurs="0" />
+                        <xs:element ref="OHS7P" minOccurs="0" />
+                        <xs:element ref="OHS8P" minOccurs="0"/>
+                        <xs:element ref="OHS9P" minOccurs="0"/>
+                        <xs:element ref="OHS10P" minOccurs="0"/>
+                        <xs:element ref="OHS11P" minOccurs="0"/>
+                        <xs:element ref="OHS12P" minOccurs="0"/>
+                        <xs:element ref="OHS1PN" minOccurs="0"/>
+                        <xs:element ref="OHS2PN" minOccurs="0"/>
+                        <xs:element ref="OHS3PN" minOccurs="0"/>
+                        <xs:element ref="OHS4PN" minOccurs="0"/>
+                        <xs:element ref="OHS5PN" minOccurs="0"/>
+                        <xs:element ref="OHS6PN" minOccurs="0" />
+                        <xs:element ref="OHS7PN" minOccurs="0" />
+                        <xs:element ref="OHS8PN" minOccurs="0"/>
+                        <xs:element ref="OHS9PN" minOccurs="0"/>
+                        <xs:element ref="OHS10PN" minOccurs="0"/>
+                        <xs:element ref="OHS11PN" minOccurs="0"/>
+                        <xs:element ref="OHS12PN" minOccurs="0"/>
+                        <xs:element ref="ANKERP" minOccurs="0"/>
+                    </xs:sequence>
+                    <!-- knie -->
+                    <xs:sequence>
+                        <xs:element ref="FUPK" minOccurs="1"/>
+                        <xs:element ref="SIDEPK" minOccurs="1"/>
+                        <xs:element ref="PIJNRUSTPK" minOccurs="0"/>
+                        <xs:element ref="PIJNACTPK" minOccurs="0"/>
+                        <xs:element ref="KOOS26P" minOccurs="0"/>
+                        <xs:element ref="KOOS25P" minOccurs="0"/>
+                        <xs:element ref="KOOS19P" minOccurs="0"/>
+                        <xs:element ref="KOOS21P" minOccurs="0"/>
+                        <xs:element ref="KOOS09P" minOccurs="0"/>
+                        <xs:element ref="KOOS38P" minOccurs="0"/>
+                        <xs:element ref="KOOS34P" minOccurs="0"/>
+                        <xs:element ref="EQ5D01PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D02PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D03PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D04PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D05PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D06PK" minOccurs="0"/>
+                        <xs:element ref="EQ5D01PK5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D02PK5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D03PK5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D04PK5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D05PK5L" minOccurs="0"/>
+                        <xs:element ref="EQ5D06PK5L" minOccurs="0"/>
+                        <xs:element ref="OKS1PK" minOccurs="0"/>
+                        <xs:element ref="OKS2PK" minOccurs="0"/>
+                        <xs:element ref="OKS3PK" minOccurs="0"/>
+                        <xs:element ref="OKS4PK" minOccurs="0"/>
+                        <xs:element ref="OKS5PK" minOccurs="0"/>
+                        <xs:element ref="OKS6PK" minOccurs="0"/>
+                        <xs:element ref="OKS7PK" minOccurs="0"/>
+                        <xs:element ref="OKS8PK" minOccurs="0"/>
+                        <xs:element ref="OKS9PK" minOccurs="0"/>
+                        <xs:element ref="OKS10PK" minOccurs="0"/>
+                        <xs:element ref="OKS11PK" minOccurs="0"/>
+                        <xs:element ref="OKS12PK" minOccurs="0"/>
+                        <xs:element ref="NRSPK" minOccurs="0"/>
+                        <xs:element ref="ANKERPK" minOccurs="0"/>
+                        <xs:element ref="ANKERP2K" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DATUMINVUL" type="xs:date"/>
+    <xs:element name="HOSPITAL">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:minInclusive value="1"/>
+                <xs:maxInclusive value="9999"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="UPNNUM" type="xs:NMTOKEN"/>
+    <xs:element name="FUPH">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:enumeration value="-1"	/>
+                <xs:enumeration value="3"	/>
+                <xs:enumeration value="12"	/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="FUPK">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:enumeration value="-1" />
+                <xs:enumeration value="3"/>
+                <xs:enumeration value="6"/>
+                <xs:enumeration value="12"/>
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="FUPS">
+        <xs:simpleType>
+            <xs:restriction base="xs:integer">
+                <xs:enumeration value="-1"	/>
+                <xs:enumeration value="3" />
+                <xs:enumeration value="12" />
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="GENDER">
+        <xs:simpleType>
+            <xs:union>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:length value="0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:enumeration value="0"	/> <!-- male -->
+                        <xs:enumeration value="1"	/> <!-- female -->
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:union>
+        </xs:simpleType>
+    </xs:element>
+
+    <!-- Combined data types -->
+    <xs:simpleType name="optional-0-4">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0" />
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="0" />
+                    <xs:maxInclusive value="4" />
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="optional-integer">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="optional-0-10">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="0"/>
+                    <xs:maxInclusive value="10"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="optional-1-3">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="1"/>
+                    <xs:maxInclusive value="3"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="optional-1-5">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="1"/>
+                    <xs:maxInclusive value="5"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="optional-0-100">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:length value="0"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="0"/>
+                    <xs:maxInclusive value="100"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="right-left">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="1"	/> <!-- right -->
+            <xs:enumeration value="2"	/> <!-- left -->
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Alleen verplicht voor een PRE OK vragenlijst niet voor POST -->
+    <xs:element name="DATBIRTH">
+        <xs:simpleType>
+            <xs:union>
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:length value="0"/>
+                    </xs:restriction>
+                </xs:simpleType>
+                <xs:simpleType>
+                    <xs:restriction base="xs:date">
+
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:union>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="SIDES" type="right-left" />
+    <xs:element name="PIJNRUSTS" type="optional-0-10" />
+    <xs:element name="PIJNACTS" type="optional-0-10" />
+    <xs:element name="EQ5D01S" type="optional-1-3" />
+    <xs:element name="EQ5D02S" type="optional-1-3" />
+    <xs:element name="EQ5D03S" type="optional-1-3" />
+    <xs:element name="EQ5D04S" type="optional-1-3" />
+    <xs:element name="EQ5D05S" type="optional-1-3" />
+    <xs:element name="EQ5D06S" type="optional-0-100" />
+    <xs:element name="EQ5D01S5L" type="optional-1-5" />
+    <xs:element name="EQ5D02S5L" type="optional-1-5" />
+    <xs:element name="EQ5D03S5L" type="optional-1-5" />
+    <xs:element name="EQ5D04S5L" type="optional-1-5" />
+    <xs:element name="EQ5D05S5L" type="optional-1-5" />
+    <xs:element name="EQ5D06S5L" type="optional-0-100" />
+    <xs:element name="OSS1" type="optional-0-4" />
+    <xs:element name="OSS2" type="optional-0-4" />
+    <xs:element name="OSS3" type="optional-0-4" />
+    <xs:element name="OSS4" type="optional-0-4" />
+    <xs:element name="OSS5" type="optional-0-4" />
+    <xs:element name="OSS6" type="optional-0-4" />
+    <xs:element name="OSS7" type="optional-0-4" />
+    <xs:element name="OSS8" type="optional-0-4" />
+    <xs:element name="OSS9" type="optional-0-4" />
+    <xs:element name="OSS10" type="optional-0-4" />
+    <xs:element name="OSS11" type="optional-0-4" />
+    <xs:element name="OSS12" type="optional-0-4" />
+    <xs:element name="AANBEVELINGS" type="optional-1-5" />
+    <xs:element name="ANKERPS" type="optional-integer" />
+    <xs:element name="ANKERP2S" type="optional-integer" />
+    <xs:element name="SIDEP" type="right-left" />
+    <xs:element name="PIJNRUSTP" type="optional-0-10" />
+    <xs:element name="PIJNACTP" type="optional-0-10" />
+    <xs:element name="HOOS16P" type="optional-0-4" />
+    <xs:element name="HOOS28P" type="optional-0-4" />
+    <xs:element name="HOOS29P" type="optional-0-4" />
+    <xs:element name="HOOS34P" type="optional-0-4" />
+    <xs:element name="HOOS35P" type="optional-0-4" />
+    <xs:element name="EQ5D01P" type="optional-1-3" />
+    <xs:element name="EQ5D02P" type="optional-1-3" />
+    <xs:element name="EQ5D03P" type="optional-1-3" />
+    <xs:element name="EQ5D04P" type="optional-1-3" />
+    <xs:element name="EQ5D05P" type="optional-1-3" />
+    <xs:element name="EQ5D06P" type="optional-0-100" />
+    <xs:element name="EQ5D01P5L" type="optional-1-5" />
+    <xs:element name="EQ5D02P5L" type="optional-1-5" />
+    <xs:element name="EQ5D03P5L" type="optional-1-5" />
+    <xs:element name="EQ5D04P5L" type="optional-1-5" />
+    <xs:element name="EQ5D05P5L" type="optional-1-5" />
+    <xs:element name="EQ5D06P5L" type="optional-0-100" />
+    <xs:element name="OHS1P"  type="optional-1-5" />
+    <xs:element name="OHS2P"  type="optional-1-5" />
+    <xs:element name="OHS3P"  type="optional-1-5" />
+    <xs:element name="OHS4P"  type="optional-1-5" />
+    <xs:element name="OHS5P"  type="optional-1-5" />
+    <xs:element name="OHS6P"  type="optional-1-5" />
+    <xs:element name="OHS7P"  type="optional-1-5" />
+    <xs:element name="OHS8P"  type="optional-1-5" />
+    <xs:element name="OHS9P"  type="optional-1-5" />
+    <xs:element name="OHS10P"  type="optional-1-5" />
+    <xs:element name="OHS11P"  type="optional-1-5" />
+    <xs:element name="OHS12P"  type="optional-1-5" />
+    <xs:element name="OHS1PN"  type="optional-0-4" />
+    <xs:element name="OHS2PN"  type="optional-0-4" />
+    <xs:element name="OHS3PN"  type="optional-0-4" />
+    <xs:element name="OHS4PN"  type="optional-0-4" />
+    <xs:element name="OHS5PN"  type="optional-0-4" />
+    <xs:element name="OHS6PN"  type="optional-0-4" />
+    <xs:element name="OHS7PN"  type="optional-0-4" />
+    <xs:element name="OHS8PN"  type="optional-0-4" />
+    <xs:element name="OHS9PN"  type="optional-0-4" />
+    <xs:element name="OHS10PN"  type="optional-0-4" />
+    <xs:element name="OHS11PN"  type="optional-0-4" />
+    <xs:element name="OHS12PN"  type="optional-0-4" />
+    <xs:element name="ANKERP" type="optional-integer" />
+    <xs:element name="SIDEPK" type="right-left" />
+    <xs:element name="PIJNRUSTPK" type="optional-0-10" />
+    <xs:element name="PIJNACTPK" type="optional-0-10" />
+    <xs:element name="KOOS26P" type="optional-0-4" />
+    <xs:element name="KOOS25P" type="optional-0-4" />
+    <xs:element name="KOOS19P" type="optional-0-4" />
+    <xs:element name="KOOS21P" type="optional-0-4" />
+    <xs:element name="KOOS09P" type="optional-0-4" />
+    <xs:element name="KOOS38P" type="optional-0-4" />
+    <xs:element name="KOOS34P" type="optional-0-4" />
+    <xs:element name="EQ5D01PK" type="optional-1-3" />
+    <xs:element name="EQ5D02PK" type="optional-1-3" />
+    <xs:element name="EQ5D03PK" type="optional-1-3" />
+    <xs:element name="EQ5D04PK" type="optional-1-3" />
+    <xs:element name="EQ5D05PK" type="optional-1-3" />
+    <xs:element name="EQ5D06PK" type="optional-0-100" />
+    <xs:element name="EQ5D01PK5L" type="optional-1-5" />
+    <xs:element name="EQ5D02PK5L" type="optional-1-5" />
+    <xs:element name="EQ5D03PK5L" type="optional-1-5" />
+    <xs:element name="EQ5D04PK5L" type="optional-1-5" />
+    <xs:element name="EQ5D05PK5L" type="optional-1-5" />
+    <xs:element name="EQ5D06PK5L" type="optional-0-100" />
+    <xs:element name="OKS1PK"  type="optional-0-4" />
+    <xs:element name="OKS2PK"  type="optional-0-4" />
+    <xs:element name="OKS3PK"  type="optional-0-4" />
+    <xs:element name="OKS4PK"  type="optional-0-4" />
+    <xs:element name="OKS5PK"  type="optional-0-4" />
+    <xs:element name="OKS6PK"  type="optional-0-4" />
+    <xs:element name="OKS7PK"  type="optional-0-4" />
+    <xs:element name="OKS8PK"  type="optional-0-4" />
+    <xs:element name="OKS9PK"  type="optional-0-4" />
+    <xs:element name="OKS10PK"  type="optional-0-4" />
+    <xs:element name="OKS11PK"  type="optional-0-4" />
+    <xs:element name="OKS12PK"  type="optional-0-4" />
+    <xs:element name="NRSPK"  type="optional-integer" />
+    <xs:element name="ANKERPK"  type="optional-integer" />
+    <xs:element name="ANKERP2K"  type="optional-integer" />
+</xs:schema>

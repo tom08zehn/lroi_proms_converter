@@ -1,0 +1,207 @@
+# Demo Configuration for LROI PROMs Converter
+# Version: v1.4.5
+
+[defaults]
+hospital = 9999  # MANDATORY: Demo hospital number
+lut_column_prefix = "__LUT__"  # Default: "__LUT__"
+log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo.log"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
+xlsx_log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo.xlsx"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
+output_xml_file = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo_output.xml"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+
+[lut]
+join_column = "PatientRecordID"
+# Note: Data validation is now handled through regex conversions
+
+# =============================================================================
+# PROM: Oxford Knee Score (OKS)
+# =============================================================================
+
+[PROM.OKS]
+detection_column = "RecordNumber"  # Unique to OKS files
+
+[PROM.OKS.lookup]
+required = true
+join_column = "RecordNumber"  # Join XLS with LUT using this column
+add_columns = ["Gender", "Date of Birth", "Laterality"]  # Columns to add from LUT (will be prefixed with __LUT__)
+
+[PROM.OKS.UPNNUM]
+column = "Patient ID"
+
+[PROM.OKS.DATUMINVUL]
+column = "Survey Date"
+
+[PROM.OKS.GENDER]
+column = "__LUT__Gender"  # Uses LUT value
+
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+
+[[PROM.OKS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+
+[PROM.OKS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.OKS.FUPK]
+column = "Follow-up Phase"
+
+[[PROM.OKS.FUPK.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+
+[[PROM.OKS.FUPK.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+
+[[PROM.OKS.FUPK.value]]
+match = "6\\s*Month|6M"
+replace = "6"
+
+[[PROM.OKS.FUPK.value]]
+match = "12\\s*Month|12M"
+replace = "12"
+
+[PROM.OKS.SIDEPK]
+column = "__LUT__Laterality"  # Uses LUT value (not XLS "Side")
+
+[[PROM.OKS.SIDEPK.value]]
+match = "Right|R"
+replace = "1"
+
+[[PROM.OKS.SIDEPK.value]]
+match = "Left|L"
+replace = "2"
+
+# OKS items
+[PROM.OKS.OKS1PK]
+column = "Q1 Pain"
+
+[PROM.OKS.OKS2PK]
+column = "Q2 Washing"
+
+[PROM.OKS.OKS3PK]
+column = "Q3 Transport"
+
+[PROM.OKS.OKS4PK]
+column = "Q4 Walking distance"
+
+[PROM.OKS.OKS5PK]
+column = "Q5 Standing from chair"
+
+[PROM.OKS.OKS6PK]
+column = "Q6 Limping"
+
+[PROM.OKS.OKS7PK]
+column = "Q7 Kneeling"
+
+[PROM.OKS.OKS8PK]
+column = "Q8 Night pain"
+
+[PROM.OKS.OKS9PK]
+column = "Q9 Interference"
+
+[PROM.OKS.OKS10PK]
+column = "Q10 Giving way"
+
+[PROM.OKS.OKS11PK]
+column = "Q11 Shopping"
+
+[PROM.OKS.OKS12PK]
+column = "Q12 Stairs"
+
+# =============================================================================
+# PROM: Oxford Hip Score (OHS)
+# =============================================================================
+
+[PROM.OHS]
+detection_column = "OHS Total"  # Changed from "OHS Q1" to match actual data
+
+[PROM.OHS.lookup]
+required = true
+join_column = "CaseID"  # Changed from "RecordNumber"
+add_columns = ["Gender", "Date of Birth", "Laterality"]
+
+[PROM.OHS.UPNNUM]
+column = "Patient ID"
+
+[PROM.OHS.DATUMINVUL]
+column = "Completion Date"  # Changed from "Survey Date"
+
+[PROM.OHS.GENDER]
+column = "__LUT__Gender"
+
+[[PROM.OHS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+
+[[PROM.OHS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+
+[PROM.OHS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+[PROM.OHS.FUPH]
+column = "Assessment Phase"  # Changed from "Follow-up Phase"
+
+[[PROM.OHS.FUPH.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+
+[[PROM.OHS.FUPH.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+
+[[PROM.OHS.FUPH.value]]
+match = "12\\s*Month|12M"
+replace = "12"
+
+[PROM.OHS.SIDEP]
+column = "__LUT__Laterality"
+
+[[PROM.OHS.SIDEP.value]]
+match = "Right|R"
+replace = "1"
+
+[[PROM.OHS.SIDEP.value]]
+match = "Left|L"
+replace = "2"
+
+# OHS items - match actual column names
+[PROM.OHS.OHS1P]
+column = "Q1 Pain"
+
+[PROM.OHS.OHS2P]
+column = "Q2 Trouble washing"
+
+[PROM.OHS.OHS3P]
+column = "Q3 Transport trouble"
+
+[PROM.OHS.OHS4P]
+column = "Q4 Socks/stockings"
+
+[PROM.OHS.OHS5P]
+column = "Q5 Shopping alone"
+
+[PROM.OHS.OHS6P]
+column = "Q6 Walking duration"
+
+[PROM.OHS.OHS7P]
+column = "Q7 Stairs difficulty"
+
+[PROM.OHS.OHS8P]
+column = "Q8 Standing from sitting"
+
+[PROM.OHS.OHS9P]
+column = "Q9 Limping"
+
+[PROM.OHS.OHS10P]
+column = "Q10 Sudden pain"
+
+[PROM.OHS.OHS11P]
+column = "Q11 Pain interference"
+
+[PROM.OHS.OHS12P]
+column = "Q12 Night pain"

@@ -1,0 +1,38 @@
+LROI PROMs Converter
+Version: v1.4.5
+Release Date: 2026-02-27
+
+Critical Fixes in v1.4.5:
+- Fixed KOOS/HOOS XSD element order (KOOS questions now appear in XML!)
+- Fixed timestamp consistency (all log/output files use same timestamp)
+- Fixed GUI prepopulate (CLI arguments now override defaults)
+- Fixed HOOS36P (removed - doesn't exist in XSD, only 5 questions)
+- Improved malformed row handling (empty rows skipped with WARNING)
+
+KOOS Issue Fixed:
+- Problem: KOOS questions (KOOS26P, KOOS25P, etc.) missing from XML output
+- Cause: Wrong element names in XSD_ELEMENT_ORDER (KOOS16PK vs KOOS26P)
+- Fix: Corrected to match XSD: KOOS26P, KOOS25P, KOOS19P, KOOS21P, KOOS09P, KOOS38P, KOOS34P
+- Result: ✓ All 7 KOOS questions now appear in XML
+
+Timestamp Issue Fixed:
+- Problem: Different timestamps for log/xlsx_log/output files
+- Cause: datetime.now() called separately for each template
+- Fix: Generate timestamp once, use for all three files
+- Result: ✓ All files have identical timestamp
+
+GUI Prepopulate Fixed:
+- Problem: CLI --output switch ignored by GUI
+- Cause: _apply_prepopulate() not setting output field
+- Fix: Properly set all fields and uncheck "use default" when CLI args provided
+- Result: ✓ CLI arguments override GUI defaults
+
+Verified Working:
+- ✓ KOOS conversions include all 7 questions
+- ✓ HOOS conversions include all 5 questions
+- ✓ All timestamps identical across log/xlsx_log/output
+- ✓ GUI respects CLI arguments
+- ✓ XSD validation passes for all PROMs
+- ✓ Duplicate patient rows handled correctly
+
+See CHANGELOG.md for full version history.

@@ -1,0 +1,42 @@
+# LROI PROMs Converter v1.4.5 - File Tree
+
+## Distribution Files
+
+```
+lroi_converter/
+├── VERSION.txt                      # Version: v1.4.5
+│
+├── README.md                        # Main documentation
+├── INSTALL.md                       # Installation instructions
+├── LICENSE                          # License file
+├── requirements.txt                 # Python dependencies
+│
+├── config.toml                      # Main configuration template (v1.4.5)
+├── main.py                          # CLI entry point (v1.4.5)
+├── gui.py                           # GUI interface (v1.4.5)
+├── converter.py                     # Core conversion engine (v1.4.5)
+├── logger.py                        # Logging utilities (v1.4.5)
+├── validate_xml.py                  # XML validation tool
+│
+├── build_exe.py                     # Builds a self-contained Windows .exe
+│
+├── demo/                            # Demo data and configuration
+│   ├── demo.config.toml             # Demo configuration (v1.4.5)
+│   ├── oks_export_site_a.xlsx       # Demo OKS data (5 rows)
+│   ├── oks_export_site_b.xlsx       # Demo OKS data (3 rows)
+│   ├── ohs_export_batch1.xlsx       # Demo OHS data (4 rows)
+│   ├── ohs_export_batch2.xlsx       # Demo OHS data (3 rows)
+│   ├── patient_demographics.xlsx    # Demo LUT file
+│   └── DEMO_SCENARIOS.md            # Scenario descriptions
+│
+├── lroi/                            # LROI specific files
+│   ├── Dictionary_LROI_PROMs_v9_2-20240205.xlsx  # LROI data dictionary
+│   └── XSD_LROI_PROMs_v9_2-20210608.xsd   # XML Schema Definition
+│
+├── docs/                            # Additional documentation
+│   ├── GUI_FEATURES.md              # GUI feature documentation
+│   └── TEST_SUITE.md                # Test scenarios and commands
+│
+└── bin/                             # Windows executable (optional)
+    └── lroi_converter.exe           # Standalone Windows executable
+```
