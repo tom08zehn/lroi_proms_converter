@@ -1,4 +1,4 @@
-# Version: v1.4.5
+# Version: v1.4.6
 """
 gui.py – Tkinter GUI for the LROI PROMs converter.
 
@@ -207,6 +207,12 @@ class ConverterGUI:
         
         # Initialize all templates with same timestamp
         self._update_all_templates()
+        
+        # Ensure "use default" checkboxes are properly initialized
+        # (Tkinter sometimes needs explicit refresh after var initialization)
+        if self._output_use_default.get():
+            self._output_entry.configure(state="disabled")
+            self._output_browse_btn.configure(state="disabled")
 
         mid = ttk.LabelFrame(self.root, text="Log", padding=p)
         mid.grid(row=1, column=0, sticky="nsew", padx=p, pady=(0, p))

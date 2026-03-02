@@ -11,14 +11,14 @@ The easiest way to see the converter in action is to run the included demo:
 ```bash
 # 1. Set up virtual environment and install dependencies
 python -m venv venv
-source venv/bin/activate          # macOS/Linux
-# OR: venv\Scripts\activate.bat   # Windows CMD
-# OR: .\venv\Scripts\Activate.ps1  # Windows PowerShell
+venv\Scripts\activate.bat         # Windows CMD
+# OR: source venv/bin/activate    # macOS/Linux
+# OR: .\venv\Scripts\Activate.ps1 # Windows PowerShell
 
 pip install -r requirements.txt
 
 # 2. Run the demo
-python main.py --cfg demo.config.toml --xls demo/ --lut demo/patient_demographics.xlsx --log 1
+python main.py --cfg demo/demo.config.toml --xls demo/ --lut demo/patient_demographics.xlsx --output demo/demo_output.xml --log 1
 ```
 
 This converts 15 synthetic questionnaires (8 OKS + 7 OHS) from 5 demo Excel files:
@@ -28,9 +28,9 @@ This converts 15 synthetic questionnaires (8 OKS + 7 OHS) from 5 demo Excel file
 - `demo/ohs_export_batch2.xlsx` — 3 OHS rows
 
 **Output:**
-- XML file: `demo_output.xml` (XSD-validated ✓)
-- Text log: `2026-02-19_main_demo.log`
-- Excel log: `2026-02-19_main_demo.xlsx` (double-click to open in Excel)
+- XML file: `demo/demo_output.xml` (XSD-validated ✓)
+- Text log: `YYYY-MM-DD-HHMMSS_demo.log`
+- Excel log: `YYYY-MM-DD-HHMMSS_demo.xlsx` (double-click to open in Excel)
 
 The demo uses **different column names** than the real config to demonstrate the flexible join column system. See `demo/README.md` for details.
 
@@ -113,9 +113,9 @@ The demo KOOS and HOOS exports use shortened questionnaire variants (KOOS-PS 7 i
 python -m venv venv
 
 # 2. Activate it
-source venv/bin/activate          # macOS/Linux
-# OR: venv\Scripts\activate.bat   # Windows CMD
-# OR: .\venv\Scripts\Activate.ps1  # Windows PowerShell
+venv\Scripts\activate.bat         # Windows CMD
+# OR: source venv/bin/activate    # macOS/Linux
+# OR: .\venv\Scripts\Activate.ps1 # Windows PowerShell
 
 # 3. Install dependencies
 pip install -r requirements.txt

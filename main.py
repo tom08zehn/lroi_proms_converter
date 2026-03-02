@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Version: v1.4.5
+# Version: v1.4.6
 """
 main.py – CLI / GUI entry point for the LROI PROMs Converter.
 
@@ -344,9 +344,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         prepopulate = {
             "xls_paths":    [str(p) for p in xls_paths],
             "lut_path":     args.lut,
-            "output_path":  output_path,
-            "log_path":     log_path,
-            "xlsx_log_path": xlsx_log_path,
+            "output_path":  args.output,  # Only pass if user provided --output (None otherwise)
+            "log_path":     None if args.log == "" else log_path,  # Only if user provided --log
+            "xlsx_log_path": None,  # GUI will use config defaults
             "hospital":     config.get("defaults", {}).get("hospital"),
             "config_path":  config_path,
         }

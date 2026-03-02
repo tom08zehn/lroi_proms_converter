@@ -1,38 +1,29 @@
 LROI PROMs Converter
-Version: v1.4.5
+Version: v1.4.6
 Release Date: 2026-02-27
 
-Critical Fixes in v1.4.5:
-- Fixed KOOS/HOOS XSD element order (KOOS questions now appear in XML!)
-- Fixed timestamp consistency (all log/output files use same timestamp)
-- Fixed GUI prepopulate (CLI arguments now override defaults)
-- Fixed HOOS36P (removed - doesn't exist in XSD, only 5 questions)
-- Improved malformed row handling (empty rows skipped with WARNING)
+Fixes in v1.4.6:
+- Fixed GUI "Use default" checkbox not ticked on startup
+- Fixed CLI arguments being pre-resolved and passed to GUI
+- Updated README.md configuration section (complete rewrite)
+- Updated INSTALL.md with correct paths and file naming
 
-KOOS Issue Fixed:
-- Problem: KOOS questions (KOOS26P, KOOS25P, etc.) missing from XML output
-- Cause: Wrong element names in XSD_ELEMENT_ORDER (KOOS16PK vs KOOS26P)
-- Fix: Corrected to match XSD: KOOS26P, KOOS25P, KOOS19P, KOOS21P, KOOS09P, KOOS38P, KOOS34P
-- Result: ✓ All 7 KOOS questions now appear in XML
+GUI Checkbox Fix:
+- Problem: "Use default" checkbox unchecked when launching GUI without CLI args
+- Cause: output_path resolved before GUI launch, passed to prepopulate even when None
+- Fix: Only pass CLI args to prepopulate if explicitly provided by user
+- Result: ✓ Checkbox properly ticked, templates shown correctly
 
-Timestamp Issue Fixed:
-- Problem: Different timestamps for log/xlsx_log/output files
-- Cause: datetime.now() called separately for each template
-- Fix: Generate timestamp once, use for all three files
-- Result: ✓ All files have identical timestamp
-
-GUI Prepopulate Fixed:
-- Problem: CLI --output switch ignored by GUI
-- Cause: _apply_prepopulate() not setting output field
-- Fix: Properly set all fields and uncheck "use default" when CLI args provided
-- Result: ✓ CLI arguments override GUI defaults
+Documentation Updates:
+- README.md: Complete configuration section rewrite based on demo.config.toml
+- Explains all aspects: required vs optional settings, value conversions, regex matching
+- Clear examples showing how PROM detection and lookups work
+- INSTALL.md: Updated paths (demo/demo.config.toml) and file naming (v1.4.5+ format)
 
 Verified Working:
-- ✓ KOOS conversions include all 7 questions
-- ✓ HOOS conversions include all 5 questions
-- ✓ All timestamps identical across log/xlsx_log/output
-- ✓ GUI respects CLI arguments
-- ✓ XSD validation passes for all PROMs
-- ✓ Duplicate patient rows handled correctly
+- ✓ GUI opens with "Use default" checked for all file fields
+- ✓ CLI --output switch properly overrides in GUI  
+- ✓ Timestamps consistent across log/xlsx_log/output
+- ✓ Documentation accurate and comprehensive
 
 See CHANGELOG.md for full version history.

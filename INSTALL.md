@@ -29,17 +29,28 @@ C:\Users\YourName\lroi_converter\
 lroi_converter/
 ├── main.py
 ├── converter.py
-├── config.toml
-├── demo.config.toml
+├── gui.py
+├── logger.py
+├── validate_xml.py
+├── config.toml               ← Main configuration file
 ├── requirements.txt          ← This file is important!
-├── pyproject.toml
+├── VERSION.txt
+├── README.md
+├── INSTALL.md
 ├── demo/
-│   ├── README.md
+│   ├── demo.config.toml      ← Demo configuration
 │   ├── patient_demographics.xlsx
 │   ├── oks_export_site_a.xlsx
 │   ├── oks_export_site_b.xlsx
 │   ├── ohs_export_batch1.xlsx
 │   └── ohs_export_batch2.xlsx
+├── example/
+│   ├── OKS_demo_account.xlsx
+│   ├── HOOS_demo_account.xlsx
+│   ├── KOOS_demo_account.xlsx
+│   ├── Demographics_demo_account.xlsx
+│   ├── Dictionary_LROI_PROMs_v9_2-20240205.xlsx
+│   └── XSD_LROI_PROMs_v9_2-20210608.xsd
 └── (other files)
 ```
 
@@ -137,9 +148,11 @@ python main.py --cfg demo.config.toml --xls demo/ --lut demo/patient_demographic
 
 **Expected output:**
 - Console shows conversion progress
-- Creates `demo_output.xml` (the converted XML file)
-- Creates `2026-02-XX_main_demo.log` (text log)
-- Creates `2026-02-XX_main_demo.xlsx` (Excel log — double-click to open)
+- Creates `2026-02-27-143542_demo_output.xml` (converted XML file)
+- Creates `2026-02-27-143542_demo.log` (text log)
+- Creates `2026-02-27-143542_demo.xlsx` (Excel log — double-click to open)
+
+**Note:** All files have the same timestamp (YYYY-MM-DD-HHMMSS) to group related outputs.
 
 ---
 
