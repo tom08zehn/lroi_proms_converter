@@ -2,111 +2,102 @@
 
 A Python application to convert **Patient Reported Outcome Measures (PROMs)** from Excel exports into LROI-compliant XML files for upload to the [LROI Databroker platform](https://www.lroi.nl/) (Dutch national orthopaedic registry).
 
+**Version:** v1.4.7
+
 ---
 
-## Quick Start — Running the Demo
-
-The easiest way to see the converter in action is to run the included demo:
+## Quick Start
 
 ```bash
-# 1. Set up virtual environment and install dependencies
+# 1. Set up Python environment
 python -m venv venv
-venv\Scripts\activate.bat         # Windows CMD
-# OR: source venv/bin/activate    # macOS/Linux
-# OR: .\venv\Scripts\Activate.ps1 # Windows PowerShell
+venv\Scripts\activate.bat          # Windows CMD
+# OR: .\venv\Scripts\Activate.ps1  # Windows PowerShell
+# OR: source venv/Scripts/activate # macOS/Linux
 
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 2. Run the demo
-python main.py --cfg demo/demo.config.toml --xls demo/ --lut demo/patient_demographics.xlsx --output demo/demo_output.xml --log 1
+# 3. Run the demo
+python main.py --cfg demo/demo.config.toml \
+  --input demo/ \
+  --lut demo/patient_demographics.xlsx \
+  --log 1
 ```
 
-This converts 15 synthetic questionnaires (8 OKS + 7 OHS) from 5 demo Excel files:
-- `demo/oks_export_site_a.xlsx` — 5 OKS rows
-- `demo/oks_export_site_b.xlsx` — 3 OKS rows  
-- `demo/ohs_export_batch1.xlsx` — 4 OHS rows
-- `demo/ohs_export_batch2.xlsx` — 3 OHS rows
-
 **Output:**
-- XML file: `demo/demo_output.xml` (XSD-validated ✓)
-- Text log: `YYYY-MM-DD-HHMMSS_demo.log`
-- Excel log: `YYYY-MM-DD-HHMMSS_demo.xlsx` (double-click to open in Excel)
+- `2026-02-27-143542_demo_output.xml` - XSD-validated XML
+- `2026-02-27-143542_demo.log` - Text log
+- `2026-02-27-143542_demo.xlsx` - Excel log (double-click to open)
 
-The demo uses **different column names** than the real config to demonstrate the flexible join column system. See `demo/README.md` for details.
+All files share the same timestamp for easy grouping.
 
 ---
 
 ## Table of Contents
 
-- [What does this do?](#what-does-this-do)
+- [What This Does](#what-this-does)
 - [Supported PROMs](#supported-proms)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [For beginners: setting up Python](#for-beginners-setting-up-python)
-  - [Installing dependencies](#installing-dependencies)
 - [Configuration](#configuration)
 - [Usage](#usage)
-  - [Command-line (headless)](#command-line-headless)
-  - [Graphical interface (GUI)](#graphical-interface-gui)
+  - [Command Line (CLI)](#command-line-cli)
+  - [Graphical Interface (GUI)](#graphical-interface-gui)
   - [Examples](#examples)
-- [Building a Windows executable](#building-a-windows-executable)
-- [How it works](#how-it-works)
+- [Building Windows Executable](#building-windows-executable)
+- [How It Works](#how-it-works)
 - [Troubleshooting](#troubleshooting)
-- [For developers](#for-developers)
 
 ---
 
-## What does this do?
+## What This Does
 
-Healthcare organizations in the Netherlands collect PROMs data (patient questionnaires about outcomes) and must submit it to the LROI. This tool:
+Healthcare organizations in the Netherlands collect PROMs data (patient questionnaires) and submit it to LROI. This tool:
 
-1. **Reads** your PROMs data exported from your hospital's system as Excel (`.xlsx` / `.xls`) files
-2. **Looks up** missing patient demographics (gender, date of birth, laterality) from a separate lookup table (if needed)
-3. **Converts** everything into a single XML file that validates against the official LROI XSD schema (`XSD_LROI_PROMs_v9_2-20210608.xsd`)
-4. **Outputs** an XML file ready to upload via the LROI Databroker web interface
+1. **Reads** PROMs data from Excel (`.xlsx` / `.xls`) files
+2. **Looks up** missing demographics (gender, date of birth, body side) from a lookup table
+3. **Converts** data into LROI XML format
+4. **Validates** output against XSD schema (`XSD_LROI_PROMs_v9_2-20210608.xsd`)
+5. **Outputs** XML ready for LROI Databroker upload
 
-**Key features:**
+**Key Features:**
 - ✅ Auto-detects PROM type (OKS, OHS, KOOS, HOOS) from column headers
-- ✅ Processes multiple Excel files at once (or entire folders)
-- ✅ Validates output against XSD schema
+- ✅ Processes multiple files or entire folders at once
+- ✅ XSD validation
 - ✅ Both CLI and GUI interfaces
-- ✅ Detailed logging for audit trails
-- ✅ Can be packaged as a single-file Windows `.exe` (no Python installation needed for end-users)
+- ✅ Detailed logging with Excel export
+- ✅ Can be packaged as single-file Windows `.exe`
 
 ---
 
 ## Supported PROMs
 
-| PROM | Full name | Joint | Status |
-|------|-----------|-------|--------|
-| **OKS** | Oxford Knee Score | Knee | ✅ **Fully tested** |
-| **OHS** | Oxford Hip Score | Hip | ⚠️ Skeleton (needs column mapping validation) |
-| **KOOS** | Knee Injury and Osteoarthritis Outcome Score | Knee | ⚠️ **Partial** (item mapping uncertain, [see notes](#koos--hoos-important-notes)) |
-| **HOOS** | Hip disability and Osteoarthritis Outcome Score | Hip | ⚠️ **Partial** (item mapping uncertain, [see notes](#koos--hoos-important-notes)) |
+| PROM | Full Name | Joint | Questions | Status |
+|------|-----------|-------|-----------|--------|
+| **OKS** | Oxford Knee Score | Knee | 12 | ✅ Fully configured |
+| **OHS** | Oxford Hip Score | Hip | 12 | ✅ Fully configured |
+| **KOOS** | Knee Injury and Osteoarthritis Outcome Score | Knee | 7 | ✅ Fully configured |
+| **HOOS** | Hip Disability and Osteoarthritis Outcome Score | Hip | 5 | ✅ Fully configured |
 
-### KOOS / HOOS Important Notes
-
-The demo KOOS and HOOS exports use shortened questionnaire variants (KOOS-PS 7 items, HOOS-PS 6 items) that **do not map 1:1** to the standard LROI dictionary items. **Your organization must validate the column-to-XML-field mappings** in `config.toml` before production use.
-
-**To validate:**
-1. Compare your export's English question text to the Dutch questions in `Dictionary_LROI_PROMs_v9_2-20240205.xlsx`
-2. Update the `koos_item_columns` / `hoos_item_columns` lists in `config.toml` to match your system's exact column names
-3. Run a test conversion and verify the XML output against a known-good sample
+All include lookup table support for demographics (gender, date of birth, laterality).
 
 ---
 
 ## Requirements
 
-- **Python 3.11 or newer** (uses `tomllib` from the standard library)
-  - For Python 3.9 / 3.10: add `tomli` to dependencies in `pyproject.toml`
-- **Operating system:** Windows, macOS, or Linux
-- **For building .exe:** Windows machine (or Windows VM / GitHub Actions)
+- **Python 3.11+** (3.13 works fine)
+- **Windows, macOS, or Linux**
+- **Dependencies:**
+  - `openpyxl` - Excel file handling
+  - `lxml` - XML validation
+  - `tkinter` - GUI (usually included with Python)
 
 ---
 
 ## Installation
 
-**Quick Setup (3 steps):**
+### Quick Setup (3 steps)
 
 ```bash
 # 1. Create virtual environment
@@ -121,590 +112,655 @@ venv\Scripts\activate.bat         # Windows CMD
 pip install -r requirements.txt
 ```
 
-**That's it!** Verify with:
+**Verify installation:**
 ```bash
-python -c "import openpyxl, lxml; print('✓ Ready to convert!')"
+python -c "import openpyxl, lxml; print('✓ Ready to use')"
 ```
 
-📖 **For detailed step-by-step instructions** (Python installation, troubleshooting, Windows-specific guidance), see **[INSTALL.md](INSTALL.md)**.
+**Detailed instructions:** See [INSTALL.md](INSTALL.md)
 
 ---
 
-
 ## Configuration
 
-All settings live in **`config.toml`**. You **must** edit this file before first use.
+All settings are in **`config.toml`**. This file maps your Excel columns to LROI XML elements.
 
-### Essential settings
+### Essential Settings
 
 ```toml
 [defaults]
-# Your hospital's LROI institution code (look it up in the 'Ziekenhuislijst' 
-# tab of the LROI PROMs dictionary Excel file)
-hospital = 1234   # ← CHANGE THIS to your actual code
-
-# Output file naming pattern (uses datetime placeholders)
-xml_file_template = "{yyyy}-{mm}-{dd}_{appname}_output.xml"
+hospital = 1234  # MANDATORY: Your LROI hospital code
 ```
 
-### PROM definitions
-
-Each `[PROM.<key>]` section defines one questionnaire type. Example (OKS is fully configured):
+**Optional settings (with defaults):**
 
 ```toml
-[PROM.OKS]
-name = "Oxford Knee Score"
-detection_column = "Oxford Knee Score"   # Column that triggers auto-detection
-col_admission_id = "Admission ID"
-col_patient_id   = "Patient ID"
-# ... (see file for complete mappings)
+lut_column_prefix = "__LUT__"
+  # Default: "__LUT__"
+  # Prefix added to lookup table columns to avoid naming conflicts
+
+log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
+  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
+  # Template for auto-named log files
+
+xlsx_log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
+  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
+  # Template for Excel log files (set to "" to disable)
+
+output_xml_file = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+  # Template for output XML filename
 ```
 
-⚠️ **KOOS and HOOS mappings are incomplete** — see [notes above](#koos--hoos-important-notes). You must validate these before production use.
+**Template placeholders:**
+- `{yyyy}` = 4-digit year (2026)
+- `{mm}` = 2-digit month (02)
+- `{dd}` = 2-digit day (27)
+- `{HH}` = 2-digit hour, 24h (14)
+- `{MM}` = 2-digit minute (35)
+- `{SS}` = 2-digit second (42)
+- `{appname}` = Script/executable name
+  - `main` when running `python main.py`
+  - `lroi_converter` when running `lroi_converter.exe`
 
-### Lookup table (LUT) settings
+---
 
-If patient demographics (gender, date of birth, laterality) are missing from your PROMs export, provide a separate Excel file with this data:
+### Lookup Table (Demographics)
+
+When patient demographics are in a separate Excel file:
 
 ```toml
 [lut]
-join_column = "Admission ID"   # Column used to JOIN PROMs ↔ demographics
-col_gender       = "Gender"
-col_date_of_birth = "Date of Birth"
-col_laterality   = "Laterality"
-
-# Data validation mode (NEW in v1.1)
-# Controls behavior when XLS and LUT have conflicting values for the same field
-validation_mode = "strict"   # Options: "strict" | "warn" | "silent"
-
-[lut.gender_map]
-"Male" = 0
-"Female" = 1
-
-[lut.laterality_map]
-"Right" = 1
-"Left" = 2
+join_column = "Participant ID"
+  # Column name used to match Excel rows with lookup table rows
+  # Must exist in BOTH files
 ```
 
-**Validation modes:**
+**How it works:**
+1. Converter reads PROM file (e.g., OKS export)
+2. For each row, gets `join_column` value (e.g., `"Participant ID" = "12345"`)
+3. Looks up that value in demographics file
+4. Adds requested columns from lookup table
+5. Prefixes added columns with `__LUT__` (e.g., `__LUT__Gender`)
 
-| Mode | Behavior when XLS ≠ LUT |
-|------|-------------------------|
-| `strict` | **ERROR** — Skip the row and log the conflict. Use this to enforce data quality. |
-| `warn` | **WARNING** — Log the conflict but proceed with the LUT value (LUT is authoritative). |
-| `silent` | No check. LUT value silently overrides XLS value (old behavior before v1.1). |
+---
 
-**Recommendation:** Always use `"strict"` in production. This catches data problems early:
-- Stale XLS exports that haven't been refreshed
-- Database synchronization issues
-- Duplicate patient records with different values
-- Manual data entry errors
+### PROM Definitions
 
-The LUT is treated as the **authoritative source** for demographics. If it's missing mandatory fields (gender, date of birth, laterality), that's also flagged as an error in strict mode.
+Each questionnaire type needs a `[PROM.<TYPE>]` section.
+
+**Note:** `<TYPE>` is a **free text identifier** you choose (e.g., `OKS`, `OHS`, `MyCustomPROM`). It's not tied to XML elements.
+
+#### Basic Structure
+
+```toml
+[PROM.OKS]
+detection_column = "1. How would you describe the pain..."
+  # Column that identifies this file as OKS
+  # When this column name appears in Excel headers, converter knows: "This is OKS"
+
+[PROM.OKS.lookup]
+  # Optional: Demographics lookup configuration
+required = true
+  # If true, conversion fails when lookup table file is missing
+  # If false, continues without lookup (assumes demographics in Excel)
+
+join_column = "Participant ID"
+  # Column to match Excel rows with lookup table rows
+
+add_columns = ["Gender", "Date of Birth", "Body Side"]
+  # Columns to fetch from lookup table
+  # Added as: __LUT__Gender, __LUT__Date of Birth, __LUT__Body Side
+```
+
+#### Element Mappings
+
+Map XML elements to Excel columns:
+
+```toml
+[PROM.OKS.UPNNUM]
+column = "Patient ID"
+  # XML <UPNNUM> gets value from Excel column "Patient ID"
+  # Simple 1:1 mapping, no transformation
+```
+
+#### Value Conversions
+
+Transform Excel values to match LROI requirements using regex:
+
+```toml
+[PROM.OKS.GENDER]
+column = "__LUT__Gender"
+  # Get value from lookup table Gender column
+
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+  # Regex pattern: matches "M", "Male", "MALE", "male"
+replace = "0"
+  # Male → 0 (required by LROI XSD)
+
+[[PROM.OKS.GENDER.value]]
+match = "^F(emale)?$"
+  # Matches: "F", "Female", "FEMALE", "female"
+replace = "1"
+  # Female → 1
+```
+
+**How conversions work:**
+1. **No conversions defined?** Value used as-is
+2. **Conversions defined?** Applied in order, **first match wins**
+3. **No match found?** Row **SKIPPED** (logged as ERROR)
+
+**Conversion modes:**
+
+```toml
+# Mode 1: Match + Replace (transformation)
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+
+# Mode 2: Match only (validation)
+[[PROM.OKS.DATUMINVUL.value]]
+match = "^\d{4}-\d{2}-\d{2}$"  # Must be YYYY-MM-DD
+# No replace = validation only
+# Row skipped if doesn't match
+```
+
+**Regex flags:**
+
+```toml
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+flags = "i"  # Optional: case-insensitive (DEFAULT)
+  # Default: flags = "i" (case-insensitive matching)
+  # For case-sensitive: explicitly set flags = ""
+  # Other flags: "m" (multiline), "s" (dotall)
+```
+
+**Note:** Case-insensitive matching (`flags = "i"`) is the **default**. You don't need to specify it unless you want different flags.
+
+---
+
+### Complete Example
+
+```toml
+# ========================================
+# Essential Settings
+# ========================================
+
+[defaults]
+hospital = 1234  # MANDATORY
+
+# Optional - defaults shown in comments
+lut_column_prefix = "__LUT__"
+log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
+xlsx_log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
+output_xml_file = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+
+# ========================================
+# Demographics Lookup
+# ========================================
+
+[lut]
+join_column = "Participant ID"
+
+# ========================================
+# Oxford Knee Score (OKS)
+# ========================================
+
+[PROM.OKS]
+detection_column = "1. How would you describe the pain..."
+
+[PROM.OKS.lookup]
+required = true
+join_column = "Participant ID"
+add_columns = ["Gender", "Date of Birth", "Body Side"]
+
+# Patient identifiers
+[PROM.OKS.UPNNUM]
+column = "Patient ID"
+
+[PROM.OKS.DATUMINVUL]
+column = "Date of Survey Completion"
+
+# Demographics (from lookup table)
+[PROM.OKS.GENDER]
+column = "__LUT__Gender"
+[[PROM.OKS.GENDER.value]]
+match = "^M(ale)?$"
+replace = "0"
+# No flags needed - case-insensitive is default
+[[PROM.OKS.GENDER.value]]
+match = "^F(emale)?$"
+replace = "1"
+
+[PROM.OKS.DATBIRTH]
+column = "__LUT__Date of Birth"
+
+# Follow-up period
+[PROM.OKS.FUPK]
+column = "Period"
+[[PROM.OKS.FUPK.value]]
+match = "Pre-?Op|Preop"
+replace = "-1"
+[[PROM.OKS.FUPK.value]]
+match = "3\\s*Month|3M"
+replace = "3"
+[[PROM.OKS.FUPK.value]]
+match = "12\\s*Month|12M|1\\s*Year"
+replace = "12"
+
+# Body side (laterality)
+[PROM.OKS.SIDEPK]
+column = "__LUT__Body Side"
+[[PROM.OKS.SIDEPK.value]]
+match = "Right|R"
+replace = "1"
+[[PROM.OKS.SIDEPK.value]]
+match = "Left|L"
+replace = "2"
+
+# OKS Questions (12 items)
+[PROM.OKS.OKS1PK]
+column = "1. How would you describe the pain..."
+
+[PROM.OKS.OKS2PK]
+column = "2. Have you had any trouble with washing..."
+
+# ... (continue for all 12 questions)
+```
+
+---
+
+### How It Works
+
+1. **File Detection:**
+   - Reads Excel headers
+   - Finds `detection_column` → identifies PROM type
+   - Uses corresponding `[PROM.<TYPE>]` configuration
+
+2. **For Each Row:**
+   - Extracts column values
+   - If `[PROM.<TYPE>.lookup]` defined: fetches demographics from lookup table
+   - For each XML element:
+     - Gets value from specified `column`
+     - Applies regex conversions (if defined)
+     - Validates format
+   - Builds XML `<questionnaire>` element
+
+3. **Value Conversions:**
+   - Applied in order (first match wins)
+   - If no match and conversions defined → row SKIPPED (ERROR logged)
+   - If no conversions → value used as-is
+
+4. **Date Handling:**
+   - **Automatic:** Python `datetime` objects from Excel → YYYY-MM-DD strings
+   - **Regex:** Use conversions for string date format transformations
+   - **Validation:** Use `python validate_xml.py output.xml schema.xsd` (separate tool)
+
+---
+
+### Configuration Tips
+
+**1. Start with demo config:**
+```bash
+cp demo/demo.config.toml myhospital.config.toml
+# Edit to match your column names
+```
+
+**2. Test with small file + DEBUG logging:**
+```bash
+python main.py --cfg myhospital.config.toml \
+  --input test_file.xlsx \
+  --loglevel DEBUG
+```
+
+**3. Check DEBUG log for column matching:**
+```
+DEBUG  Detected PROM type: OKS
+DEBUG  Extracted UPNNUM: "P12345" from column "Patient ID"
+DEBUG  Converted GENDER: "Male" → "0"
+```
+
+**4. Common issues:**
+- ❌ Column name typo: `"Patient ID"` vs `"PatientID"`
+- ❌ Detection column not unique: same column in different PROM files
+- ❌ Regex needs case-insensitive: default is already case-insensitive
+- ❌ Missing lookup columns: `add_columns = ["Gender"]` but lookup has "Sex"
 
 ---
 
 ## Usage
 
-### Command-line (headless)
+### Command Line (CLI)
 
-Run the converter without opening a GUI:
+Run conversion without GUI:
 
 ```bash
-python main.py --xls path/to/OKS_export.xlsx \
-               --lut path/to/Demographics.xlsx \
+python main.py --input file.xlsx \
+               --lut demographics.xlsx \
                --output output.xml \
                --hospital 1234
 ```
 
 **Arguments:**
-- `--xls FILE_OR_FOLDER` — One or more Excel files, or a folder containing `.xlsx`/`.xls` files. Can be repeated or space-separated. Folders are walked recursively.
+- `--input FILE_OR_FOLDER` — Excel file(s) or folder. Can be repeated. Folders searched recursively.
 - `--lut FILE` — Optional demographics lookup table (Excel file)
-- `--output FILE` — Output XML path (defaults to timestamped file per `config.toml`)
-- `--hospital N` — Hospital LROI code (overrides `config.toml`)
-- `--log FILE|1` — Log file path, or `1` for auto-named log (from `config.toml` template). When enabled, also creates an Excel log file (see below).
-- `--config FILE` — Path to `config.toml` (default: searches next to `main.py`)
+- `--output FILE` — Output XML path (default: timestamped from config)
+- `--hospital N` — Hospital LROI code (overrides config)
+- `--log FILE|1` — Log file path, or `1` for auto-named (creates both .log and .xlsx)
+- `--loglevel LEVEL` — Log level: DEBUG (shows PII/PHI), INFO (default, safe), WARNING, ERROR
+- `--cfg FILE` — Path to config.toml (default: looks next to main.py)
 
 **Log files:**
 
-When you use `--log 1`, the app creates **two log files**:
+When using `--log 1`, creates **two log files**:
 
-1. **Text log** (`.log`) — Human-readable, for developers/IT staff
-   ```
-   2026-02-18 14:30:15  INFO      Converted OKS row: admission_id=249227  patient_id=440587  phase=Pre-Op
-   2026-02-18 14:30:15  ERROR     VALIDATION FAILED: Laterality mismatch for Admission ID='256123'
-   ```
-
+1. **Text log** (`.log`) — Human-readable for developers
 2. **Excel log** (`.xlsx`) — **Double-click to open in Excel**
+   - Auto-filter enabled
+   - Color-coded rows (red = ERROR, yellow = WARNING)
+   - Frozen headers
+   - Sortable columns
 
-**Why `.xlsx` instead of `.csv`?**
+---
 
-| Issue | CSV | XLSX |
-|-------|-----|------|
-| Opens in Excel | Sometimes (file association issues) | ✅ Always |
-| Regional delimiters | `,` vs `;` confusion | ✅ No issue (binary format) |
-| Date formatting | Text that Excel might misinterpret | ✅ Proper date column |
-| Encoding | UTF-8 BOM helps but not foolproof | ✅ No encoding issues |
-| Auto-filter | User must enable manually | ✅ Enabled by default |
-| Color coding | Not possible | ✅ Red ERROR, yellow WARNING |
-| Formatting | Plain text only | ✅ Bold headers, frozen panes |
+### Graphical Interface (GUI)
 
-**The Excel log includes:**
-   - Auto-filter enabled on all columns
-   - Frozen header row
-   - Bold headers with gray background
-   - **ERROR rows highlighted in red**
-   - **WARNING rows highlighted in yellow**
-   - Admission ID extracted into dedicated column
-   - Proper date/time column (sortable)
-
-The Excel log is designed for **healthcare professionals** to:
-- **Double-click the `.xlsx` file** → opens directly in Excel (no delimiter issues)
-- **Click filter dropdowns** in header row → show only ERROR/WARNING rows
-- **Sort by any column** → group by Level, Admission ID, or Timestamp
-- **Color-coded rows** → red for errors, yellow for warnings, instant visual feedback
-- **Share with colleagues** — proper Excel file, no encoding/delimiter confusion
-
-To **disable Excel logging**, edit `config.toml`:
-```toml
-xlsx_log_file_template = ""   # Empty string disables Excel logs
-```
-
-### Graphical interface (GUI)
-
-Launch the GUI:
+Launch GUI:
 
 ```bash
 python main.py --gui
 ```
 
-Or with prepopulated fields:
+Or with pre-filled fields:
 
 ```bash
 python main.py --gui \
-               --xls path/to/files_or_folder \
-               --lut path/to/Demographics.xlsx \
-               --hospital 1234
+               --input path/to/files \
+               --lut demographics.xlsx \
+               --output custom_output.xml
 ```
 
-Add `--run` to start the conversion immediately without waiting for user interaction:
-
-```bash
-python main.py --gui --run --xls data/ --lut Demographics.xlsx
-```
-
-**GUI features:**
-- **Config file** — browse to load a different `config.toml` file
-- **Files…** button — select multiple Excel files (multi-select, additive)
-- **Folder…** button — select a folder; all `.xlsx`/`.xls` files inside are included
-- **Text log file:**
-  - **"Use default"** checkbox — when checked, uses template from config (like `--log 1`)
-  - Shows resolved filename (e.g., `2026-02-19_main.log`)
-  - When unchecked, browse to choose custom path
-- **Excel log file:**
-  - **"Use default"** checkbox — when checked, uses template from config
-  - Shows resolved filename (e.g., `2026-02-19_main.xlsx`)
-  - When unchecked, browse to choose custom path
-  - Automatically disabled if config has empty `xlsx_log_file_template`
-- **Log output** — real-time conversion progress with color-coded messages
-- **Clear Log** — reset the log view between runs
-
-💡 **Tip:** The GUI remembers your settings during the session. Change the config file to switch between different hospital configurations.
+**GUI Features:**
+- **Config file** — Browse to load different config
+- **Input files** — Select multiple files or folder
+- **Lookup table** — Select demographics file
+- **Log level** — Choose DEBUG, INFO, WARNING, or ERROR
+- **Output XML file** — Specify output filename (or use template)
+- **Log files** — Text and Excel logs with "Use default" checkboxes
+- **Real-time log** — Color-coded conversion progress
+- **Clear Log** — Reset view between runs
 
 ---
 
 ### Examples
 
-**Process a single file:**
+**Single file:**
 ```bash
-python main.py --xls OKS_demo_account.xlsx --output oks_output.xml
+python main.py --input OKS_export.xlsx --output oks.xml
 ```
 
-**Process multiple files:**
+**Multiple files:**
 ```bash
-python main.py --xls file1.xlsx file2.xlsx file3.xlsx --output combined.xml
+python main.py --input file1.xlsx file2.xlsx file3.xlsx --output combined.xml
 ```
 
-**Process all Excel files in a folder:**
+**Entire folder:**
 ```bash
-python main.py --xls data/ --output combined.xml
+python main.py --input data/ --output combined.xml
 ```
 
-**Batch conversion: multiple files of the same PROM type:**
+**With demographics lookup:**
 ```bash
-# Convert 3 OKS files from different sites into one XML
-python main.py \
-  --xls site_a_oks.xlsx site_b_oks.xlsx site_c_oks.xlsx \
-  --lut demographics.xlsx \
-  --output oks_combined.xml
+python main.py --input exports/ \
+               --lut demographics.xlsx \
+               --output output.xml \
+               --log 1
 ```
 
-**Batch conversion: mixed PROM types (OKS + OHS):**
+**Production mode (PII/PHI safe logging):**
 ```bash
-# Convert OKS and OHS files together into one XML
-# The converter auto-detects each file's PROM type
-python main.py \
-  --xls oks_file1.xlsx oks_file2.xlsx ohs_file1.xlsx ohs_file2.xlsx \
-  --lut demographics.xlsx \
-  --output all_proms.xml \
-  --hospital 1234
+python main.py --input exports/ \
+               --lut demographics.xlsx \
+               --loglevel INFO \
+               --log 1
 ```
 
-**Batch conversion: entire folder with mixed PROM types:**
+**Development mode (see value conversions):**
 ```bash
-# Processes all .xlsx files in exports/ folder
-# Auto-detects OKS, OHS, KOOS, HOOS and combines into one XML
-python main.py \
-  --xls exports/ \
-  --lut demographics.xlsx \
-  --output monthly_upload.xml \
-  --log 1
+python main.py --input test.xlsx \
+               --loglevel DEBUG \
+               --log 1
 ```
-
-**💡 Note:** All files must use the **same LUT** (lookup table). If different sites use different LUT files, run separate conversions.
-
-**With demographics lookup and logging:**
-```bash
-python main.py \
-  --xls exports/ \
-  --lut Demographics.xlsx \
-  --output output.xml \
-  --log conversion.log \
-  --hospital 1234
-```
-
-**Auto-named log file:**
-```bash
-python main.py --xls exports/ --log 1
-# Creates: 2026-02-17_main.log (text)
-#      and 2026-02-17_main.xlsx (Excel)
-```
-
-**💡 Tip for Excel users:** After running with `--log 1`, find the `.xlsx` file in the same directory and **double-click it**. It opens directly in Excel with:
-- **Auto-filter enabled** — click dropdown arrows in header row
-- **Color-coded rows** — red for ERROR, yellow for WARNING
-- **Frozen header** — header stays visible when scrolling
-- **Sortable columns** — click any header to sort
-
-No delimiter confusion, no encoding issues, no manual import steps — just double-click and analyze.
 
 ---
 
-## Building a Windows executable
+## Building Windows Executable
 
-If you want to distribute the app to colleagues who don't have Python installed:
+Create standalone `.exe` for users without Python:
 
 ### Prerequisites
 
 - Windows machine (or Windows VM)
 - Python 3.11+ installed
-- Dependencies installed with build tools:
-  ```bash
-  pip install ".[build]"
-  ```
+- PyInstaller: `pip install pyinstaller`
 
-### Build process
+### Build
 
 ```bash
 python build_exe.py
 ```
 
-This creates:
-```
-dist/
-  lroi_converter/
-    lroi_converter.exe   ← Single-file executable
-    config.toml          ← Configuration (must be edited before distributing)
-```
+**Output:** `dist/lroi_converter/lroi_converter.exe`
 
-**To distribute:**
-1. Edit `config.toml` to set the correct `hospital =` number for your institution
-2. Zip the entire `dist/lroi_converter/` folder
-3. Send to end-users with instructions: "Unzip and double-click `lroi_converter.exe`"
+### Custom Icon
 
-**Important:** The `.exe` and `config.toml` **must be in the same folder**. Each hospital should set their own LROI code in `config.toml` before use.
+1. Create or obtain `your_icon.ico` (256x256 recommended)
+2. Place in project root
+3. Edit `build_exe.py` line 67:
+   ```python
+   ICON_FILE: Path | None = PROJECT_DIR / "your_icon.ico"
+   ```
+4. Run: `python build_exe.py`
+
+### Distribution
+
+Ship `dist/lroi_converter/` folder containing:
+- `lroi_converter.exe`
+- `config.toml` (users edit this)
+
+**Usage:**
+```cmd
+lroi_converter.exe --input data\ --lut demographics.xlsx
+```
 
 ---
 
-## How it works
+## How It Works
 
 ### Architecture
 
-The application is split into focused modules:
-
 ```
-lroi_converter/
-├── main.py         # CLI argument parsing, entry point
-├── converter.py    # Core XLS → XML conversion engine
-├── lut.py          # Lookup table loader and query helper
-├── logger.py       # Logging setup (console + file)
-├── gui.py          # Tkinter GUI (completely isolated)
-├── config.toml     # All configuration and PROM definitions
-├── pyproject.toml  # Dependencies and project metadata
-└── build_exe.py    # PyInstaller build script
+Excel Files → Converter → LROI XML
+     ↓            ↓
+Lookup Table   Config
 ```
 
-This design allows:
-- **Headless CLI** to work on servers without a display (GUI is only imported when `--gui` is passed)
-- **Easy testing** of conversion logic without UI concerns
-- **Simple extension** — add a new PROM by creating a `[PROM.XYZ]` section in `config.toml` and a builder function in `converter.py`
+### Processing Flow
 
-### Conversion flow
+1. **Load configuration** from `config.toml`
+2. **Read Excel files** (`.xlsx` / `.xls`)
+3. **Detect PROM type** from `detection_column`
+4. **For each row:**
+   - Extract all column values
+   - Lookup demographics (if configured)
+   - Map columns to XML elements
+   - Apply regex conversions
+   - Validate values
+5. **Build XML** in XSD-compliant order
+6. **Write output** file
+7. **Log results** (text + Excel)
 
-```mermaid
-graph TD
-    A[Excel file(s)] --> B{Auto-detect PROM type}
-    B -->|OKS| C[OKS builder]
-    B -->|KOOS| D[KOOS builder]
-    B -->|HOOS| E[HOOS builder]
-    B -->|OHS| F[OHS builder]
-    C --> G{LUT needed?}
-    D --> G
-    E --> G
-    F --> G
-    G -->|Yes| H[Look up demographics]
-    G -->|No| I[Skip LUT]
-    H --> J[Build XML elements]
-    I --> J
-    J --> K[Combine into single XML]
-    K --> L[Validate against XSD]
-    L --> M[Write output.xml]
-```
+### Data Validation
 
-1. **Auto-detection:** The first row (header) is scanned for a `detection_column` (e.g., "Oxford Knee Score"). This identifies the PROM type.
-2. **Row processing:** Each data row is converted to a `<questionaire>` XML element.
-3. **LUT lookup (optional):** If demographics are missing, they're fetched from the lookup table via a JOIN on `Admission ID`.
-4. **XML assembly:** All questionnaire elements are wrapped in `<LROIPROM><questionaires>...</questionaires></LROIPROM>`.
-5. **Validation:** The output is validated against `XSD_LROI_PROMs_v9_2-20210608.xsd` (if `lxml` is installed).
-6. **Output:** A single XML file ready for upload.
-
----
-
-## Validating XML Output
-
-After conversion, you can validate the XML against the LROI XSD schema using the standalone validator:
-
-```bash
-python validate_xml.py output.xml XSD_LROI_PROMs_v9_2-20210608.xsd
-```
-
-**Output if valid:**
-```
-✓ output.xml is VALID
-```
-
-**Output if validation fails:**
-```
-✗ output.xml validation FAILED:
-
-  Line 45, Column 0:
-    Element 'GENDER': This element is not expected...
-  
-Total errors: 1
-```
-
-**Use cases:**
-- Verify XML before uploading to LROI website
-- Debugging conversion issues
-- CI/CD pipeline validation
-- Batch validation of multiple XML files
-
-**Note:** The LROI upload website also validates files before submission.
+- **Required fields:** Skips row if missing
+- **Regex conversions:** Validates format, transforms values
+- **Date conversion:** Automatic `datetime` → YYYY-MM-DD
+- **XSD validation:** Use `validate_xml.py` to verify output
 
 ---
 
 ## Troubleshooting
 
-### Installation Issues
+### "python is not recognized"
+Python not in PATH. Reinstall and check "Add Python to PATH".
 
-#### "Cannot import 'setuptools.backends.legacy'"
+### "No module named 'openpyxl'"
+Dependencies not installed. Run: `pip install -r requirements.txt`
 
-If you get this error when running `pip install .`, use `requirements.txt` instead:
+### "Config file not found"
+- CLI: Copy `config.toml` to same directory as script/exe
+- Or use: `--cfg /path/to/config.toml`
+- GUI: Opens anyway, browse for config
+
+### "No PROM type detected"
+`detection_column` not found in Excel headers.
+- Check column name spelling (case-sensitive)
+- Use `--loglevel DEBUG` to see column detection
+
+### "Validation failed for GENDER"
+Value doesn't match any regex pattern.
+- Check Excel values: "Male" vs "M" vs "male"
+- Default is case-insensitive (`flags = "i"`)
+- Add more patterns or fix data
+
+### XSD Validation Errors
+
+Run validation separately:
 ```bash
-pip install -r requirements.txt
+python validate_xml.py output.xml XSD_LROI_PROMs_v9_2-20210608.xsd
 ```
 
-This is a simpler installation method that doesn't require package building.
+Common errors:
+- Date format: ensure YYYY-MM-DD (automatic for `datetime` objects)
+- Missing required elements: check config mappings
+- Invalid enum values: check regex conversions
 
-#### "ModuleNotFoundError: No module named 'openpyxl'"
+### Column Name Issues
 
-You forgot to install dependencies. Make sure your virtual environment is activated, then run:
-```bash
-pip install -r requirements.txt
+Check exact column names in your Excel file:
+```python
+import openpyxl
+wb = openpyxl.load_workbook("yourfile.xlsx")
+ws = wb.active
+headers = next(ws.iter_rows(values_only=True))
+print(headers)  # Shows exact column names
 ```
 
-#### Demo folder structure after download
+### Regex Testing
 
-After extracting the downloaded files, your folder structure should look like:
+Test patterns at [regex101.com](https://regex101.com):
+1. Select Python flavor
+2. Test your `match` patterns
+3. Verify replacements work
+
+---
+
+## Getting Help
+
+**Check logs:**
+```bash
+python main.py --input test.xlsx --loglevel DEBUG --log 1
+```
+
+**Verify config:**
+- Compare your config with `demo/demo.config.toml`
+- Check column names match exactly
+- Test regex patterns online
+
+**Common patterns:**
+- Gender: `^M(ale)?$` and `^F(emale)?$`
+- Dates: `^\d{4}-\d{2}-\d{2}$` (YYYY-MM-DD)
+- Periods: `Pre-?Op|Preop` for "Pre-Op", "PreOp", "Preop"
+
+**Still stuck?**
+- Enable `--loglevel DEBUG` to see exact values
+- Check demo files for working examples
+- Verify lookup table `join_column` values exist in both files
+
+---
+
+## Project Structure
+
 ```
 lroi_converter/
-├── main.py
-├── converter.py
-├── config.toml
-├── demo.config.toml
-├── requirements.txt
+├── main.py                    # CLI/GUI entry point
+├── converter.py               # Core conversion logic
+├── gui.py                     # GUI interface
+├── logger.py                  # Logging configuration
+├── validate_xml.py            # XSD validation tool
+├── config.toml                # Main configuration
+├── requirements.txt           # Python dependencies
+├── build_exe.py               # Windows .exe builder
+├── VERSION.txt                # Version information
+├── README.md                  # This file
+├── INSTALL.md                 # Installation guide
 ├── demo/
-│   ├── README.md
+│   ├── demo.config.toml       # Demo configuration
+│   ├── README.md              # Demo usage guide
 │   ├── patient_demographics.xlsx
 │   ├── oks_export_site_a.xlsx
 │   ├── oks_export_site_b.xlsx
 │   ├── ohs_export_batch1.xlsx
 │   └── ohs_export_batch2.xlsx
-└── ...
-```
-
-If the `.xlsx` files are in the wrong location, manually move them into the `demo/` folder.
-
-### Runtime Issues
-
-### "ERROR: Config file not found"
-
-The app looks for `config.toml` next to `main.py` by default. Either:
-- Run from the `lroi_converter/` directory: `cd lroi_converter && python main.py ...`
-- Or specify the path: `python main.py --config /full/path/to/config.toml ...`
-
-### "Cannot detect PROM type"
-
-The Excel file's header row doesn't contain the `detection_column` defined in `config.toml`. Check:
-1. Does your export match the expected format?
-2. Is the column name spelled exactly as in the config (case-sensitive)?
-3. For KOOS/HOOS: the `detection_column` is `"Interval Score"` — verify this column exists.
-
-### "Row skipped: unknown phase 'X'"
-
-The follow-up phase value (e.g., "Pre-Op", "3 Month") in your Excel doesn't match any key in the `[PROM.XXX.fupk_map]` section of `config.toml`. Add the missing value:
-```toml
-[PROM.OKS.fupk_map]
-"6 weeks" = 3   # ← add your organization's custom phase names
-```
-
-### "XSD validation failed"
-
-The generated XML doesn't conform to the LROI schema. Common causes:
-- Required fields are empty (e.g., `SIDEPK`, `FUPK`)
-- Value out of range (e.g., OKS item = 5, but valid range is 0-4)
-- Wrong element order (the XSD is sequence-strict; elements must appear in schema order)
-
-Check the console output for the specific validation error.
-
-### "VALIDATION FAILED: Gender/laterality/DOB mismatch"
-
-The same patient has different values in the XLS export vs the demographics LUT. For example:
-- XLS says laterality="Left", but LUT says laterality="Right"
-- XLS gender="Female", but LUT gender="Male"
-
-**This is a data quality issue.** Check:
-1. Are you using the correct, up-to-date LUT file?
-2. Did the export system use the wrong patient ID?
-3. Is there a duplicate patient record in your database?
-4. Was the surgery laterality changed after the PROMs export?
-
-**If the mismatch is expected** (e.g., during testing with old exports), change `validation_mode = "warn"` in `config.toml` to proceed with warnings instead of errors.
-
-**Never use `validation_mode = "silent"`** in production — it masks data problems.
-
-### GUI doesn't open on Linux
-
-Tkinter isn't installed. On Ubuntu/Debian:
-```bash
-sudo apt install python3-tk
-```
-
-### "Permission denied" when running build_exe.py on Windows
-
-PyInstaller needs write access to the project directory. Run your terminal as Administrator, or move the project folder out of `C:\Program Files`.
-
----
-
-## For developers
-
-### Project structure philosophy
-
-**Separation of concerns:**
-- `converter.py` is pure logic — no I/O, no GUI
-- `gui.py` only imports when `--gui` is used (headless CLI doesn't load tkinter)
-- `config.toml` is the single source of truth for all mappings
-
-**Why not a single monolithic file?**
-- Headless environments (servers, Docker) often don't have `tkinter` → importing GUI would crash
-- Testing conversion logic doesn't require a UI
-- Adding new PROMs is just config + one builder function, not editing a 1000-line file
-
-### Adding a new PROM
-
-1. **Add config section** in `config.toml`:
-   ```toml
-   [PROM.MYNEWPROM]
-   name = "My New PROM"
-   detection_column = "Unique Column Name"
-   col_admission_id = "Admission ID"
-   # ... define all column mappings
-   ```
-
-2. **Write builder function** in `converter.py`:
-   ```python
-   def _build_mynewprom_questionaire(...) -> Optional[ET.Element]:
-       # Convert row dict to XML element
-       q = ET.Element("questionaire")
-       _sub(q, "DATUMINVUL", ...)
-       # ... populate all required fields per XSD
-       return q
-   ```
-
-3. **Register builder**:
-   ```python
-   _BUILDERS = {
-       "OKS": _build_oks_questionaire,
-       "MYNEWPROM": _build_mynewprom_questionaire,
-   }
-   ```
-
-4. **Test** with sample data.
-
-### Running tests (future)
-
-A `tests/` directory is planned. When ready:
-```bash
-pip install ".[dev]"
-pytest
-```
-
-### Code style
-
-The project uses **Ruff** for linting and formatting (config in `pyproject.toml`):
-```bash
-pip install ".[dev]"
-ruff check .
-ruff format .
+└── example/
+    ├── OKS_demo_account.xlsx
+    ├── HOOS_demo_account.xlsx
+    ├── KOOS_demo_account.xlsx
+    ├── Demographics_demo_account.xlsx
+    ├── Dictionary_LROI_PROMs_v9_2-20240205.xlsx
+    └── XSD_LROI_PROMs_v9_2-20210608.xsd
 ```
 
 ---
 
-## Questions or issues?
+## Version History
 
-- Check the `config.toml` comments carefully — most configuration questions are answered there
-- Review the LROI PROMs dictionary (`Dictionary_LROI_PROMs_v9_2-20240205.xlsx`) to understand field mappings
-- For KOOS/HOOS: verify your export format matches the demo files, or adjust the config accordingly
+**v1.4.7** (2026-02-27)
+- Renamed --xls to --input (breaking change)
+- Complete documentation rewrite
+- All configuration clarifications
+
+**v1.4.6** (2026-02-27)
+- Fixed GUI "Use default" checkbox
+- Updated documentation
+
+**v1.4.5** (2026-02-27)
+- Fixed KOOS/HOOS element order
+- Fixed timestamp consistency
+- Fixed GUI prepopulate
+
+**v1.4.4** (2026-02-27)
+- Added log level control (PII/PHI protection)
+- Added output XML file configuration
+- Added HOOS and KOOS support
+
+See [VERSION.txt](VERSION.txt) for complete changelog.
 
 ---
 
-## Answer to your specific question
+## License
 
-> Do they provide optional fields PIJNRUSTPK/PIJNACTPK?
-
-**No.** Neither the KOOS nor HOOS demo exports contain `PIJNRUSTPK` (pain at rest) or `PIJNACTPK` (pain during activity) columns. These fields are optional per the XSD schema (`minOccurs="0"`), so they are left empty in the generated XML.
-
-If your organization's export **does** include pain NRS scores, add them to `config.toml`:
-```toml
-[PROM.KOOS]
-col_pain_rest = "Pain at Rest (0-10)"
-col_pain_activity = "Pain During Activity (0-10)"
-```
-Then update `_build_koos_questionaire()` in `converter.py` to read these columns and populate `PIJNRUSTPK` / `PIJNACTPK`.
+[Your license here]
 
 ---
 
-**Version:** 1.0.0  
-**Last updated:** 2026-02-17  
-**Maintained by:** Your organization  
-**LROI:** [https://www.lroi.nl/](https://www.lroi.nl/)
+## Contact
+
+[Your contact information here]
+
+---
+
+**Last Updated:** v1.4.7 (2026-02-27)

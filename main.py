@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
-# Version: v1.4.6
+# Version: v1.4.7
 """
 main.py – CLI / GUI entry point for the LROI PROMs Converter.
 
 Usage examples
 --------------
 # Run immediately (no GUI):
-python main.py --xls OKS.xlsx --lut Demographics.xlsx \\
+python main.py --input OKS.xlsx --lut Demographics.xlsx \\
                --output output.xml --hospital 1234
 
 # Open GUI with prepopulated values, wait for user:
 python main.py --gui \\
-               --xls OKS.xlsx --lut Demographics.xlsx \\
+               --input OKS.xlsx --lut Demographics.xlsx \\
                --output output.xml --hospital 1234
 
 # Open GUI, run immediately without waiting:
 python main.py --gui --run \\
-               --xls OKS.xlsx --lut Demographics.xlsx \\
+               --input OKS.xlsx --lut Demographics.xlsx \\
                --output output.xml
 
 # Log to auto-named file:
-python main.py --xls OKS.xlsx --log 1
+python main.py --input OKS.xlsx --log 1
 
 # Log to specific file:
-python main.py --xls OKS.xlsx --log my_run.log
+python main.py --input OKS.xlsx --log my_run.log
 """
 
 from __future__ import annotations
@@ -215,9 +215,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--xls",
+        "--input",
         metavar="FILE_OR_FOLDER",
         nargs="+",
+        dest="xls",  # Keep internal variable name for compatibility
         help=(
             "One or more input XLS/XLSX files and/or folders.  "
             "When a folder is given, all *.xlsx/*.xls files in it "
@@ -361,7 +362,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # ── Headless CLI mode ─────────────────────────────────────────────────────
     if not xls_paths:
         parser.error(
-            "At least one --xls file or folder is required (or use --gui)."
+            "At least one --input file or folder is required (or use --gui)."
         )
 
     # Set up logger

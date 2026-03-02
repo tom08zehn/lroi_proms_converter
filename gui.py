@@ -1,4 +1,4 @@
-# Version: v1.4.6
+# Version: v1.4.7
 """
 gui.py – Tkinter GUI for the LROI PROMs converter.
 

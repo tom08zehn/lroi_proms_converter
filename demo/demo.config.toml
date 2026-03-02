@@ -1,5 +1,5 @@
 # Demo Configuration for LROI PROMs Converter
-# Version: v1.4.5
+# Version: v1.4.7
 
 [defaults]
 hospital = 9999  # MANDATORY: Demo hospital number

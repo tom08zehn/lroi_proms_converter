@@ -1,7 +1,7 @@
 """
 converter.py – Unified XLS → XML conversion engine for LROI PROMs.
 
-Version: v1.4.5
+Version: v1.4.7
 
 v1.4.0 Architecture:
 - Single, consistent mapping pattern for ALL XML elements

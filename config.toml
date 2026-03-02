@@ -1,5 +1,5 @@
 # LROI PROMs Converter Configuration
-# Version: v1.4.5
+# Version: v1.4.7
 
 [defaults]
 hospital = 1234  # MANDATORY: Hospital number for all conversions

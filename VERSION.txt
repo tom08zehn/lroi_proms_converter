@@ -1,29 +1,46 @@
 LROI PROMs Converter
-Version: v1.4.6
+Version: v1.4.7
 Release Date: 2026-02-27
 
-Fixes in v1.4.6:
-- Fixed GUI "Use default" checkbox not ticked on startup
-- Fixed CLI arguments being pre-resolved and passed to GUI
-- Updated README.md configuration section (complete rewrite)
-- Updated INSTALL.md with correct paths and file naming
+Major Changes in v1.4.7:
+- Renamed --xls to --input (BREAKING CHANGE - update your scripts!)
+- Complete README.md and demo/README.md rewrite
+- Fixed all 10 user-reported documentation issues
+- Updated INSTALL.md with latest structure and Windows-first approach
+- Clarified validation-only regex (match without replace)
+- Corrected flags default: "i" is default (case-insensitive)
+- Changed example columns to "Participant ID" and "Body Side"
+- Clarified <TYPE> is free text identifier
+- Separated datetime auto-conversion from XSD validation
+- Explained .ico usage in build_exe.py
 
-GUI Checkbox Fix:
-- Problem: "Use default" checkbox unchecked when launching GUI without CLI args
-- Cause: output_path resolved before GUI launch, passed to prepopulate even when None
-- Fix: Only pass CLI args to prepopulate if explicitly provided by user
-- Result: ✓ Checkbox properly ticked, templates shown correctly
+CLI Breaking Change:
+--xls renamed to --input for consistency with --output
+OLD: python main.py --xls file.xlsx
+NEW: python main.py --input file.xlsx
 
-Documentation Updates:
-- README.md: Complete configuration section rewrite based on demo.config.toml
-- Explains all aspects: required vs optional settings, value conversions, regex matching
-- Clear examples showing how PROM detection and lookups work
-- INSTALL.md: Updated paths (demo/demo.config.toml) and file naming (v1.4.5+ format)
+Documentation Completely Rewritten:
+- README.md: Based on v1.4.7 code and demo.config.toml
+- demo/README.md: Complete usage guide for demo
+- INSTALL.md: Windows-first, complete folder structure
+- No deprecated keys or outdated information
+
+All 10 User Requests Implemented:
+1. ✅ Validation-only regex explained
+2. ✅ flags="i" default documented correctly  
+3. ✅ Examples use "Participant ID", "Body Side"
+4. ✅ <TYPE> clarified as free text
+5. ✅ Date conversion vs XSD validation separated
+6. ✅ --xls renamed to --input
+7. ✅ Windows CMD prioritized in installation
+8. ✅ INSTALL.md shows complete structure
+9. ✅ .ico usage explained in build guide
+10. ✅ Complete README rewrites with all above
 
 Verified Working:
-- ✓ GUI opens with "Use default" checked for all file fields
-- ✓ CLI --output switch properly overrides in GUI  
-- ✓ Timestamps consistent across log/xlsx_log/output
-- ✓ Documentation accurate and comprehensive
+- ✓ --input switch functional
+- ✓ All documentation accurate
+- ✓ No deprecated content
+- ✓ Example column names consistent
 
-See CHANGELOG.md for full version history.
+See V1.4.7_COMPLETE_CHANGES.md for detailed migration guide.
