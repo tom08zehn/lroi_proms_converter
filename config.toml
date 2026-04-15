@@ -1,5 +1,5 @@
 # LROI PROMs Converter Configuration
-# Version: v1.4.7
+# Version: v1.4.9
 
 [defaults]
 hospital = 1234  # MANDATORY: Hospital number for all conversions
@@ -45,7 +45,7 @@ replace = "1"
 column = "__LUT__Date of Birth"
 
 [PROM.OKS.FUPK]
-column = "Grouped Phase"
+column = "Period"
 
 [[PROM.OKS.FUPK.value]]
 match = "Pre-?Op|Preop"
@@ -143,7 +143,7 @@ replace = "1"
 column = "__LUT__Date of Birth"
 
 [PROM.OHS.FUPH]
-column = "Grouped Phase"
+column = "Period"
 
 [[PROM.OHS.FUPH.value]]
 match = "Pre-?Op|Preop"
@@ -214,7 +214,7 @@ detection_column = "1. Going up or down stairs"  # Unique to HOOS/KOOS in the ex
 [PROM.HOOS.lookup]
 required = true
 join_column = "Admission ID"
-add_columns = ["Date of Birth", "Laterality"]
+add_columns = ["Gender", "Date of Birth", "Laterality"]
 
 [PROM.HOOS.UPNNUM]
 column = "Patient ID"
@@ -294,7 +294,7 @@ detection_column = "1. How severe is your knee stiffness after first wakening in
 [PROM.KOOS.lookup]
 required = true
 join_column = "Admission ID"
-add_columns = ["Date of Birth", "Laterality"]
+add_columns = ["Gender", "Date of Birth", "Laterality"]
 
 [PROM.KOOS.UPNNUM]
 column = "Patient ID"

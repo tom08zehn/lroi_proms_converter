@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Version: v1.4.7
+# Version: v1.4.9
 """
 main.py – CLI / GUI entry point for the LROI PROMs Converter.
 
@@ -35,6 +35,9 @@ import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# ── Constants ──────────────────────────────────────────────────────────────────
+GUI_FLAG = '--gui'  # Used in multiple places - define once
 
 # ── Locate config.toml relative to executable (handles PyInstaller) ────────────
 
@@ -288,6 +291,10 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    # Default to GUI if no arguments provided (e.g., double-clicking .exe)
+    if argv is None and len(sys.argv) == 1:
+        argv = [GUI_FLAG]
+    
     parser = _build_parser()
     args   = parser.parse_args(argv)
 
@@ -360,9 +367,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     # ── Headless CLI mode ─────────────────────────────────────────────────────
+    # If we reach here, we're in CLI mode (GUI mode returns above)
     if not xls_paths:
         parser.error(
-            "At least one --input file or folder is required (or use --gui)."
+            "At least one --input file or folder is required for CLI mode. "
+            f"For GUI mode, run: {Path(sys.argv[0]).name} {GUI_FLAG}"
         )
 
     # Set up logger

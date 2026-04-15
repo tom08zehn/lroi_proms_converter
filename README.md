@@ -2,7 +2,7 @@
 
 A Python application to convert **Patient Reported Outcome Measures (PROMs)** from Excel exports into LROI-compliant XML files for upload to the [LROI Databroker platform](https://www.lroi.nl/) (Dutch national orthopaedic registry).
 
-**Version:** v1.4.7
+**Version:** v1.4.10
 
 ---
 
@@ -11,9 +11,9 @@ A Python application to convert **Patient Reported Outcome Measures (PROMs)** fr
 ```bash
 # 1. Set up Python environment
 python -m venv venv
-venv\Scripts\activate.bat          # Windows CMD
-# OR: .\venv\Scripts\Activate.ps1  # Windows PowerShell
-# OR: source venv/Scripts/activate # macOS/Linux
+venv\Scripts\activate.bat         # Windows CMD
+# OR: source venv/bin/activate    # macOS/Linux
+# OR: .\venv\Scripts\Activate.ps1 # Windows PowerShell
 
 # 2. Install dependencies
 pip install -r requirements.txt

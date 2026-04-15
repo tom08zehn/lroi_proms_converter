@@ -1,7 +1,16 @@
 """
 converter.py – Unified XLS → XML conversion engine for LROI PROMs.
 
-Version: v1.4.7
+Version: v1.4.10
+
+v1.4.10 Changes:
+- 0 (integer zero) detected as valid value for PROMs answer (not skipped)
+- logging of skipped rows now includes reason
+
+v1.4.9 Changes:
+- Added magic functions support for dynamic calculations
+- Virtual columns for multi-step computations
+- 54 magic functions available
 
 v1.4.0 Architecture:
 - Single, consistent mapping pattern for ALL XML elements
@@ -20,6 +29,14 @@ from xml.etree import ElementTree as ET
 from xml.dom import minidom
 
 import openpyxl
+
+# Magic functions support (v1.4.9)
+try:
+    from magic_functions import evaluate as evaluate_magic
+    MAGIC_FUNCTIONS_AVAILABLE = True
+except ImportError:
+    MAGIC_FUNCTIONS_AVAILABLE = False
+    evaluate_magic = None
 
 log = logging.getLogger("lroi")
 
@@ -298,8 +315,13 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
     """
     Extract all XML elements from row using PROM config mappings.
     
-    Iterates through all element definitions in prom_config, extracts values
-    from the row, and applies any conversions defined.
+    v1.4.9: Now supports magic functions for dynamic calculations.
+    
+    Processing order:
+    1. Start with base row data (XLS + LUT columns)
+    2. Process virtual columns in definition order (any key except 'column', 'value', meta fields)
+    3. Process 'column' key last (may reference virtual columns)
+    4. Apply regex conversions
     
     Parameters:
         row: Merged XLS + LUT data (with prefixed LUT columns)
@@ -308,14 +330,15 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
     Returns:
         Dict[xml_element → converted_value]
     
-    Example:
+    Example (v1.4.9 with magic functions):
         prom_config = {
-            "UPNNUM": {"column": "Patient ID"},
-            "FUPK": {"column": "Phase", "value": [{"match": "Pre-Op", "replace": "-1"}]}
+            "FUPK": {
+                "__diff_months": "$DATE_DIFF(%(survey),%(surgery),months)",
+                "__computed": "$IF($LT(%(__diff_months),0),-1,3)",
+                "column": "$FIRST_N(%(__computed),%(Period))",
+                "value": [{"match": "Pre-Op", "replace": "-1"}]
+            }
         }
-        row = {"Patient ID": "P001", "Phase": "Pre-Op"}
-        elements = extract_elements(row, prom_config)
-        # → {"UPNNUM": "P001", "FUPK": "-1"}
     """
     elements = {}
     
@@ -324,30 +347,79 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
         if xml_element in ["detection_column", "lookup"]:
             continue
         
-        # Must be a dict with 'column' key
+        # Must be a dict
         if not isinstance(element_config, dict):
             continue
         
-        column_name = element_config.get("column")
-        if not column_name:
+        # Start with a copy of row data for this element
+        # This allows virtual columns to reference each other
+        element_row_data = dict(row)
+        
+        # Step 1: Process all keys except 'column' and 'value' (virtual columns)
+        # These are processed in definition order
+        for key, value in element_config.items():
+            if key in ['column', 'value', 'lookup']:
+                continue
+            
+            # Check if value contains magic functions or variables
+            if isinstance(value, str) and ('$' in value or '%(' in value):
+                # Trim whitespace for multi-line values
+                if '\n' in value:
+                    value = '\n'.join(line.strip() for line in value.split('\n'))
+                
+                # Evaluate magic function
+                if MAGIC_FUNCTIONS_AVAILABLE:
+                    try:
+                        computed_value = evaluate_magic(value, element_row_data)
+                        element_row_data[key] = computed_value
+                        log.debug("Computed %s.%s = %s", xml_element, key, computed_value)
+                    except Exception as e:
+                        log.warning("Magic function error in %s.%s: %s", xml_element, key, e)
+                        element_row_data[key] = value  # Use literal value
+                else:
+                    log.warning("Magic functions not available (import failed). Using literal value for %s.%s", xml_element, key)
+                    element_row_data[key] = value
+            else:
+                # Not a magic function, just store as-is
+                element_row_data[key] = value
+        
+        # Step 2: Process 'column' key (final value selection)
+        column_spec = element_config.get("column")
+        if not column_spec:
             continue
         
-        # Get raw value from row
-        raw_value = row.get(column_name)
+        # Column can be a magic function or plain column name
+        if isinstance(column_spec, str) and ('$' in column_spec or '%(' in column_spec):
+            # Trim whitespace for multi-line
+            if '\n' in column_spec:
+                column_spec = '\n'.join(line.strip() for line in column_spec.split('\n'))
+            
+            # Evaluate magic function
+            if MAGIC_FUNCTIONS_AVAILABLE:
+                try:
+                    raw_value = evaluate_magic(column_spec, element_row_data)
+                    log.debug("Evaluated %s column spec to: %s", xml_element, raw_value)
+                except Exception as e:
+                    log.error("Magic function error in %s column: %s", xml_element, e)
+                    continue
+            else:
+                log.warning("Magic functions not available. Treating column spec as literal for %s", xml_element)
+                raw_value = column_spec
+        else:
+            # Plain column name - get from row
+            raw_value = element_row_data.get(column_spec)
         
         # Skip empty values
         if raw_value is None or str(raw_value).strip() == "":
             continue
         
         # Auto-convert datetime objects to date strings (for XSD compliance)
-        # XSD xs:date type expects YYYY-MM-DD format, not datetime with time component
         from datetime import datetime, date
         if isinstance(raw_value, (datetime, date)):
-            # Convert datetime to date string (YYYY-MM-DD)
             raw_value = raw_value.strftime("%Y-%m-%d") if isinstance(raw_value, datetime) else raw_value.isoformat()
             log.debug("Converted datetime to date: %s = %s", xml_element, raw_value)
         
-        # Apply conversions
+        # Step 3: Apply regex conversions
         conversions = element_config.get("value", [])
         try:
             converted = apply_conversions(raw_value, conversions, xml_element)
@@ -365,7 +437,7 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any]) -> Optional[str]:
+def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any], row_number: Optional[int] = None) -> Optional[str]:
     """
     Detect PROM type using detection_column.
     
@@ -374,6 +446,7 @@ def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any]) -> Optio
     Parameters:
         row: XLS row data
         prom_configs: config["PROM"]
+        row_number: Excel row number (1-based, including header) for error messages
     
     Returns:
         PROM key (e.g., "OKS", "OHS") or None if no match
@@ -387,18 +460,42 @@ def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any]) -> Optio
         prom_type = detect_prom_type(row, prom_configs)
         # → "OKS"
     """
+    row_info = f" (Excel row {row_number})" if row_number else ""
+    
     for prom_key, prom_config in prom_configs.items():
         detection_col = prom_config.get("detection_column")
         
         if not detection_col:
+            log.debug("PROM %s: No detection_column configured%s", prom_key, row_info)
             continue
         
         if detection_col not in row:
+            log.debug("PROM %s: detection_column '%s' not found in row%s", prom_key, detection_col, row_info)
             continue
         
         value = row[detection_col]
-        if value and str(value).strip():
+        
+        # IMPORTANT: Check explicitly for None, not just truthiness
+        # This allows value 0 (zero) to be valid, which is needed for KOOS/HOOS questions
+        if value is not None and str(value).strip() != "":
+            log.debug("PROM %s detected: detection_column '%s' = %s%s", prom_key, detection_col, value, row_info)
             return prom_key
+        else:
+            log.debug("PROM %s: detection_column '%s' is empty/None%s (value: %s)", 
+                     prom_key, detection_col, row_info, repr(value))
+    
+    # No PROM type detected - log detailed reason
+    log.warning("No PROM type detected%s. Checked detection columns:", row_info)
+    for prom_key, prom_config in prom_configs.items():
+        detection_col = prom_config.get("detection_column")
+        if detection_col:
+            if detection_col in row:
+                value = row[detection_col]
+                log.warning("  - %s.detection_column='%s': value=%s (empty/None)", 
+                           prom_key, detection_col, repr(value))
+            else:
+                log.warning("  - %s.detection_column='%s': column not found in Excel", 
+                           prom_key, detection_col)
     
     return None
 
@@ -556,8 +653,8 @@ def convert(
         
         headers = [str(h).strip() if h is not None else "" for h in rows[0]]
         
-        # Process data rows
-        for row_values in rows[1:]:
+        # Process data rows (enumerate to track row numbers)
+        for row_idx, row_values in enumerate(rows[1:], start=2):  # Start at 2 (header=1, first data=2)
             if all(v is None for v in row_values):
                 continue  # Blank row
             
@@ -568,10 +665,10 @@ def convert(
             }
             
             # Detect PROM type (first match wins)
-            prom_key = detect_prom_type(row, prom_configs)
+            prom_key = detect_prom_type(row, prom_configs, row_number=row_idx)
             
             if not prom_key:
-                log.warning("No PROM type detected for row")
+                log.warning("No PROM type detected for Excel row %d (skipped)", row_idx)
                 n_skipped += 1
                 continue
             

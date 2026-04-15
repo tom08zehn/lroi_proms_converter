@@ -1,16 +1,14 @@
-# Demo Configuration for LROI PROMs Converter
-# Version: v1.4.7
+# Demo Configuration for LROI PROMs Converter v1.4.0
 
 [defaults]
-hospital = 9999  # MANDATORY: Demo hospital number
-lut_column_prefix = "__LUT__"  # Default: "__LUT__"
-log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo.log"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.log"
-xlsx_log_file_template = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo.xlsx"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}.xlsx"
-output_xml_file = "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_demo_output.xml"  # Default: "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_output.xml"
+hospital = 9999  # Demo hospital number
+lut_column_prefix = "__LUT__"
+log_file_template = "{yyyy}-{mm}-{dd}_{appname}.log"
+xlsx_log_file_template = "{yyyy}-{mm}-{dd}_{appname}.xlsx"
 
 [lut]
 join_column = "PatientRecordID"
-# Note: Data validation is now handled through regex conversions
+validation_mode = "strict"
 
 # =============================================================================
 # PROM: Oxford Knee Score (OKS)
