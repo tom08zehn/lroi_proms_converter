@@ -342,19 +342,31 @@ def func_ne(a: Any, b: Any) -> bool:
 
 def func_lt(a: Any, b: Any) -> bool:
     """$LT(a, b) - Less than."""
-    return a < b
+    try:
+        return _to_number(a) < _to_number(b)
+    except ValueError:
+        return a < b
 
 def func_le(a: Any, b: Any) -> bool:
     """$LE(a, b) - Less than or equal."""
-    return a <= b
+    try:
+        return _to_number(a) <= _to_number(b)
+    except ValueError:
+        return a <= b
 
 def func_gt(a: Any, b: Any) -> bool:
     """$GT(a, b) - Greater than."""
-    return a > b
+    try:
+        return _to_number(a) > _to_number(b)
+    except ValueError:
+        return a > b
 
 def func_ge(a: Any, b: Any) -> bool:
     """$GE(a, b) - Greater than or equal."""
-    return a >= b
+    try:
+        return _to_number(a) >= _to_number(b)
+    except ValueError:
+        return a >= b
 
 def func_eqi(a: Any, b: Any) -> bool:
     """$EQI(a, b) - Equal, case-insensitive."""
@@ -640,7 +652,7 @@ def _interpolate_variables(expression: str, row_data: Dict[str, Any]) -> str:
 def _parse_function_call(expression: str, row_data: Dict[str, Any]) -> Any:
     """Parse and evaluate a function call."""
     # Check if it's a function call
-    func_pattern = r'^([#$][A-Z_]+)\((.*)\)$'
+    func_pattern = r'^(#|\$[A-Z_]+)\((.*)\)$'
     match = re.match(func_pattern, expression, re.DOTALL)
     
     if not match:
@@ -693,16 +705,25 @@ def _parse_arguments(args_str: str, row_data: Dict[str, Any]) -> List[Any]:
         else:
             current_arg += char
     
-    # Add last argument
-    if current_arg.strip():
-        args.append(current_arg.strip())
+    # Add last argument (empty string is a valid argument)
+    args.append(current_arg.strip())
     
     # Evaluate each argument (could be nested function call or variable)
     evaluated_args = []
     for arg in args:
-        # Interpolate variables first
-        arg = _interpolate_variables(arg, row_data)
-        # Then evaluate if it's a function call
+        # v1.5.0: If the entire argument is a pure variable reference %(name),
+        # return the raw value to preserve its type (bool, int, etc.).
+        # Without this, boolean False becomes the string "false" which is
+        # truthy, breaking $IF(%(__is_hip), ..., #(false)) patterns.
+        var_match = re.fullmatch(r'%\(([^)]+)\)', arg)
+        if var_match:
+            col_name = var_match.group(1)
+            if col_name in row_data:
+                evaluated_args.append(row_data[col_name])
+                continue
+        # Evaluate the argument. Do NOT call _interpolate_variables here —
+        # evaluate() already handles %(…) at the right level, preserving
+        # types for pure variable references even inside nested calls.
         arg = evaluate(arg, row_data)
         evaluated_args.append(arg)
     
@@ -734,6 +755,13 @@ def evaluate(expression: str, row_data: Dict[str, Any]) -> Any:
     
     # Check if it contains variables
     if '%(' in expression:
+        # v1.5.0: If the entire expression is a pure variable reference,
+        # return the raw value to preserve its type (bool, int, etc.).
+        var_match = re.fullmatch(r'%\(([^)]+)\)', expression)
+        if var_match:
+            col_name = var_match.group(1)
+            if col_name in row_data:
+                return row_data[col_name]
         return _interpolate_variables(expression, row_data)
     
     # Plain string

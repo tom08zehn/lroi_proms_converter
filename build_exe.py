@@ -130,6 +130,13 @@ def _build_pyinstaller_command() -> list[str]:
         f"--distpath={DIST_DIR.parent}",  # PyInstaller puts output in distpath/<name>/
     ]
 
+    args = sys.argv[1:]
+    if len(args) > 0:
+        print(f"  Note: extra command-line arguments passed to build_exe.py:")
+        for arg in args:
+            print(f"    {arg}")
+        cmd += args
+
     # ── Hidden imports ────────────────────────────────────────────────────────
     for hi in HIDDEN_IMPORTS:
         cmd += ["--hidden-import", hi]

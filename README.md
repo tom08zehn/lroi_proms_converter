@@ -2,7 +2,7 @@
 
 A Python application to convert **Patient Reported Outcome Measures (PROMs)** from Excel exports into LROI-compliant XML files for upload to the [LROI Databroker platform](https://www.lroi.nl/) (Dutch national orthopaedic registry).
 
-**Version:** v1.4.10
+**Version:** v1.5.0
 
 ---
 
@@ -62,7 +62,7 @@ Healthcare organizations in the Netherlands collect PROMs data (patient question
 5. **Outputs** XML ready for LROI Databroker upload
 
 **Key Features:**
-- ✅ Auto-detects PROM type (OKS, OHS, KOOS, HOOS) from column headers
+- ✅ Auto-detects PROM type (OKS, OHS, KOOS, HOOS, EQ-5D-5L per joint) from column headers
 - ✅ Processes multiple files or entire folders at once
 - ✅ XSD validation
 - ✅ Both CLI and GUI interfaces
@@ -79,8 +79,11 @@ Healthcare organizations in the Netherlands collect PROMs data (patient question
 | **OHS** | Oxford Hip Score | Hip | 12 | ✅ Fully configured |
 | **KOOS** | Knee Injury and Osteoarthritis Outcome Score | Knee | 7 | ✅ Fully configured |
 | **HOOS** | Hip Disability and Osteoarthritis Outcome Score | Hip | 5 | ✅ Fully configured |
+| **EQ-5D-5L** | EuroQol 5-Dimension 5-Level | Hip / Knee / Shoulder | 6 | ✅ Fully configured |
 
 All include lookup table support for demographics (gender, date of birth, laterality).
+
+**Note:** EQ-5D-5L is a cross-joint questionnaire.  LROI requires different XML element names per joint.  A single `[PROM.EQ5D5L]` config section handles all joints using [conditional element skip](#conditional-element-skip-v150) — the `Procedure Type` column determines which joint-specific XML elements are emitted.
 
 ---
 
@@ -282,6 +285,95 @@ flags = "i"  # Optional: case-insensitive (DEFAULT)
 
 ---
 
+### Magic Expression Detection (v1.5.0)
+
+Some PROMs like **EQ-5D-5L** are used across multiple joints (hip, knee, shoulder), but LROI requires different XML element names per joint.  Standard `detection_column` only matches a single column name, which can't distinguish between joints.
+
+**Solution:** `detection_column` now supports **magic expressions**.  When the value contains `$` or `%(`, it is evaluated as a magic expression instead of a column-name lookup.  If the expression evaluates to **boolean `true`**, the PROM type is detected.
+
+#### Example: EQ-5D-5L per Joint
+
+```toml
+# ── Hip variant ──
+[PROM.EQ5D5L_HIP]
+detection_column = "$AND($N(%(EQ-5D-5L Score)),$EQI(%(Joint),Hip))"
+#                        ↑ column has a value      ↑ Joint column = "Hip"
+
+# ── Knee variant ──
+[PROM.EQ5D5L_KNEE]
+detection_column = "$AND($N(%(EQ-5D-5L Score)),$EQI(%(Joint),Knee))"
+```
+
+Each variant has its own `[PROM.<NAME>.<ELEMENT>]` sections with the correct LROI XML element names (e.g., `FUPH`/`SIDEP` for hip, `FUPK`/`SIDEPK` for knee).
+
+#### How It Works
+
+| `detection_column` value | Mode | Detected when... |
+|---|---|---|
+| `"Oxford Knee Score"` | Column name (original) | Column exists and has a non-empty value |
+| `"$AND($N(%(EQ-5D-5L Score)),$EQI(%(Joint),Hip))"` | Magic expression (v1.5.0) | Expression evaluates to `true` |
+
+**Rules:**
+1. If `detection_column` contains `$` or `%(` → evaluated as magic expression
+2. Otherwise → original column-name detection (unchanged)
+3. First matching PROM type wins (same as before)
+4. Missing columns evaluate to empty/`None` — they won't cause errors, just `false`
+
+#### PROM-Level Virtual Columns
+
+You can define `__variables` at the `[PROM.<NAME>]` level for reuse in detection and XML elements:
+
+```toml
+[PROM.EQ5D5L_HIP]
+__is_hip = "$EQI(%(Joint),Hip)"
+__has_eq5d = "$N(%(EQ-5D-5L Score))"
+detection_column = "$AND(%(__has_eq5d),%(__is_hip))"
+
+[PROM.EQ5D5L_HIP.FUPH]
+# __is_hip is available here too
+column = "$IF(%(__is_hip),%(follow_up_period),#(false))"
+```
+
+PROM-level virtual columns:
+- Must start with `__` (double underscore)
+- Are evaluated in definition order
+- Are available to **all** XML element sections within the same PROM
+- Can reference each other and row data
+
+#### Conditional Element Skip (v1.5.0)
+
+If an XML element's `column` is a magic expression that evaluates to **boolean `false`**, the element is silently skipped (no XML tag emitted).  This is useful for conditional output:
+
+```toml
+[PROM.MIXED.FUPH]
+# Only emit FUPH for hip patients; skip for others
+column = "$IF($EQI(%(Joint),Hip),%(follow_up_period),#(false))"
+
+[PROM.MIXED.FUPK]
+# Only emit FUPK for knee patients; skip for others
+column = "$IF($EQI(%(Joint),Knee),%(follow_up_period),#(false))"
+```
+
+#### Available Functions for Detection
+
+Any magic function can be used.  Commonly useful ones:
+
+| Function | Example | Description |
+|---|---|---|
+| `$N(val)` | `$N(%(Col))` | True if column has a non-empty value |
+| `$Z(val)` | `$Z(%(Col))` | True if column is empty/missing |
+| `$EQ(a,b)` | `$EQ(%(Type),Hip)` | Exact equality (case-sensitive) |
+| `$EQI(a,b)` | `$EQI(%(Type),hip)` | Case-insensitive equality |
+| `$AND(…)` | `$AND($N(%(A)),$N(%(B)))` | All conditions must be true |
+| `$OR(…)` | `$OR($EQ(%(X),1),$EQ(%(X),2))` | At least one must be true |
+| `$CONTAINS(s,sub)` | `$CONTAINS(%(Name),Hip)` | Substring check |
+| `$MATCH(s,pat)` | `$MATCH(%(Col),^EQ.*)` | Regex check |
+| `#(true)` / `#(false)` | `$IF(cond,#(true),#(false))` | Boolean literals |
+
+See `magic_functions.py` for the full list of ~60 functions.
+
+---
+
 ### Complete Example
 
 ```toml
@@ -377,17 +469,20 @@ column = "2. Have you had any trouble with washing..."
 
 1. **File Detection:**
    - Reads Excel headers
-   - Finds `detection_column` → identifies PROM type
+   - Finds `detection_column` → identifies PROM type (plain column name or magic expression)
    - Uses corresponding `[PROM.<TYPE>]` configuration
 
 2. **For Each Row:**
    - Extracts column values
    - If `[PROM.<TYPE>.lookup]` defined: fetches demographics from lookup table
-   - For each XML element:
-     - Gets value from specified `column`
+   - For each XML element (in config.toml definition order):
+     - Gets value from specified `column` (may be a magic expression)
+     - If expression evaluates to boolean `false` → element skipped
      - Applies regex conversions (if defined)
      - Validates format
    - Builds XML `<questionnaire>` element
+
+   **Important:** The order of `[PROM.<TYPE>.<ELEMENT>]` sections in config.toml determines the XML element order.  This must match the LROI XSD sequence (typically: DATUMINVUL, HOSPITAL, UPNNUM, GENDER, DATBIRTH, then PROM-specific elements).  If `HOSPITAL` is not explicitly defined as a section, it is auto-inserted after `DATUMINVUL`.
 
 3. **Value Conversions:**
    - Applied in order (first match wins)
@@ -728,6 +823,15 @@ lroi_converter/
 
 ## Version History
 
+**v1.5.0** (2026-06-01)
+- **Magic expression detection:** `detection_column` now supports magic expressions for multi-condition PROM detection
+- **PROM-level virtual columns:** Define `__variables` at `[PROM.<NAME>]` level, reusable across detection and all XML elements
+- **Conditional element skip:** XML elements whose `column` expression evaluates to boolean `false` are silently omitted
+- **EQ-5D-5L fully configured:** Single unified config section handles hip, knee, and shoulder using conditional skip on `Procedure Type`
+- **Element order from config:** Removed hardcoded `XSD_ELEMENT_ORDER` — XML element order is now derived from the key order in config.toml. New PROM types no longer require code changes.
+- **Type preservation:** Pure `%(variable)` references inside magic functions now preserve their original Python type (bool, int, etc.) instead of being stringified
+- **GUI loglevel fix:** `--loglevel` CLI argument now correctly pre-populates the GUI dropdown
+
 **v1.4.7** (2026-02-27)
 - Renamed --xls to --input (breaking change)
 - Complete documentation rewrite
@@ -763,4 +867,4 @@ See [VERSION.txt](VERSION.txt) for complete changelog.
 
 ---
 
-**Last Updated:** v1.4.7 (2026-02-27)
+**Last Updated:** v1.5.0 (2026-06-01)

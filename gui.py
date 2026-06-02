@@ -496,6 +496,10 @@ class ConverterGUI:
         if "hospital" in pp and pp["hospital"]:
             self._hospital_var.set(str(pp["hospital"]))
 
+        # Apply CLI --loglevel to GUI dropdown
+        if "loglevel" in pp and pp["loglevel"]:
+            self._loglevel_var.set(pp["loglevel"])
+
     # ─────────────────────────────────────────────────────────────────────────
     # Run conversion
     # ─────────────────────────────────────────────────────────────────────────

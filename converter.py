@@ -1,15 +1,28 @@
 """
 converter.py – Unified XLS → XML conversion engine for LROI PROMs.
 
-Version: v1.4.10
+Version: v1.5.0
+
+v1.5.0 Changes:
+- detection_column now supports magic expressions (evaluates to boolean true/false)
+- PROM-level virtual columns: define __variables at [PROM.<NAME>] level, available
+  to all XML elements and to detection_column itself
+- Element skip: if a column magic expression evaluates to boolean false, the XML
+  element is silently skipped (useful for conditional output)
+- Enables per-joint PROM configs (e.g. EQ5D5L_HIP, EQ5D5L_KNEE) using
+  multi-condition detection
+
+v1.4.11 Changes:
+- Virtual columns (variables) are now retained across all XML elements in the same record
+- Fixed magic function `#()` (JSON.parse)
 
 v1.4.10 Changes:
 - 0 (integer zero) detected as valid value for PROMs answer (not skipped)
-- logging of skipped rows now includes reason
+- Logging of skipped rows now includes reason
 
 v1.4.9 Changes:
 - Added magic functions support for dynamic calculations
-- Virtual columns for multi-step computations
+- Virtual columns (variables) for multi-step computations
 - 54 magic functions available
 
 v1.4.0 Architecture:
@@ -341,21 +354,28 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
         }
     """
     elements = {}
+
+    # Virtual columns (across elements)
+    # Seed with PROM-level virtual columns (__var keys defined at [PROM.<NAME>] level)
+    virtual_columns = _eval_prom_virtual_columns(prom_config, row)
     
     for xml_element, element_config in prom_config.items():
         # Skip meta fields
         if xml_element in ["detection_column", "lookup"]:
             continue
         
-        # Must be a dict
+        # Must be a dict (PROM-level virtual columns are strings, already handled)
         if not isinstance(element_config, dict):
             continue
         
         # Start with a copy of row data for this element
         # This allows virtual columns to reference each other
         element_row_data = dict(row)
+
+        # Add previously computed 'virtual columns' (variables) to the row data for this element
+        element_row_data.update(virtual_columns)
         
-        # Step 1: Process all keys except 'column' and 'value' (virtual columns)
+        # Step 1: Process all keys except 'column' and 'value' (the 'virtual columns' or 'variables')
         # These are processed in definition order
         for key, value in element_config.items():
             if key in ['column', 'value', 'lookup']:
@@ -371,17 +391,20 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
                 if MAGIC_FUNCTIONS_AVAILABLE:
                     try:
                         computed_value = evaluate_magic(value, element_row_data)
-                        element_row_data[key] = computed_value
+                        virtual_columns[key] = computed_value
                         log.debug("Computed %s.%s = %s", xml_element, key, computed_value)
                     except Exception as e:
                         log.warning("Magic function error in %s.%s: %s", xml_element, key, e)
-                        element_row_data[key] = value  # Use literal value
+                        virtual_columns[key] = value  # Use literal value
                 else:
                     log.warning("Magic functions not available (import failed). Using literal value for %s.%s", xml_element, key)
-                    element_row_data[key] = value
+                    virtual_columns[key] = value
             else:
                 # Not a magic function, just store as-is
-                element_row_data[key] = value
+                virtual_columns[key] = value
+            
+            # Update the row data for this element with computed virtual columns
+            element_row_data.update(virtual_columns)
         
         # Step 2: Process 'column' key (final value selection)
         column_spec = element_config.get("column")
@@ -408,6 +431,12 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
         else:
             # Plain column name - get from row
             raw_value = element_row_data.get(column_spec)
+
+        # Element skip: if the expression evaluated to boolean False, skip
+        # this XML element entirely (v1.5.0 conditional output feature).
+        if raw_value is False:
+            log.debug("Skipping element %s: expression evaluated to false", xml_element)
+            continue
         
         # Skip empty values
         if raw_value is None or str(raw_value).strip() == "":
@@ -437,66 +466,156 @@ def extract_elements(row: Dict[str, Any], prom_config: Dict[str, Any]) -> Dict[s
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+def _is_magic_expression(value: str) -> bool:
+    """Check if a string is a magic expression (contains $ functions or %() variables)."""
+    return isinstance(value, str) and ('$' in value or '%(' in value)
+
+
+def _eval_prom_virtual_columns(
+    prom_config: Dict[str, Any],
+    row: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Evaluate PROM-level virtual columns (keys starting with '__').
+
+    These are string values defined directly under [PROM.<NAME>] (not inside
+    an XML element sub-table).  They are evaluated in definition order and
+    can reference each other.
+
+    Returns a dict of {__varname: computed_value}.
+    """
+    virtuals: Dict[str, Any] = {}
+
+    for key, value in prom_config.items():
+        if not key.startswith('__') or not isinstance(value, str):
+            continue
+
+        if _is_magic_expression(value):
+            if MAGIC_FUNCTIONS_AVAILABLE:
+                try:
+                    eval_data = dict(row)
+                    eval_data.update(virtuals)
+                    # Pre-fill any referenced but missing columns with None
+                    for m in re.finditer(r'%\(([^)]+)\)', value):
+                        col = m.group(1)
+                        if col not in eval_data:
+                            eval_data[col] = None
+                    virtuals[key] = evaluate_magic(value, eval_data)
+                    log.debug("PROM virtual %s = %s", key, virtuals[key])
+                except Exception as e:
+                    log.debug("PROM virtual %s error: %s", key, e)
+                    virtuals[key] = value
+            else:
+                virtuals[key] = value
+        else:
+            virtuals[key] = value
+
+    return virtuals
+
+
 def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any], row_number: Optional[int] = None) -> Optional[str]:
     """
     Detect PROM type using detection_column.
-    
-    First matching detection_column wins. Other PROM types in the row are ignored.
-    
+
+    detection_column can be:
+      • A plain column name (original behaviour):
+        detection_column = "Oxford Knee Score"
+        → detected when that column exists in the row and has a non-empty value.
+
+      • A magic expression (v1.5.0):
+        detection_column = "$AND($N(%(EQ-5D-5L Score)),$EQI(%(Joint),Hip))"
+        → detected when the expression evaluates to boolean True.
+        PROM-level virtual columns (__var) are evaluated first and can be
+        referenced inside the detection expression.
+
+    First matching detection_column wins.
+
     Parameters:
         row: XLS row data
         prom_configs: config["PROM"]
         row_number: Excel row number (1-based, including header) for error messages
-    
+
     Returns:
-        PROM key (e.g., "OKS", "OHS") or None if no match
-    
-    Example:
-        prom_configs = {
-            "OKS": {"detection_column": "Oxford Knee Score Total"},
-            "OHS": {"detection_column": "Oxford Hip Score Total"}
-        }
-        row = {"Oxford Knee Score Total": "45", ...}
-        prom_type = detect_prom_type(row, prom_configs)
-        # → "OKS"
+        PROM key (e.g., "OKS", "EQ5D5L_HIP") or None if no match
     """
     row_info = f" (Excel row {row_number})" if row_number else ""
-    
+
     for prom_key, prom_config in prom_configs.items():
         detection_col = prom_config.get("detection_column")
-        
+
         if not detection_col:
             log.debug("PROM %s: No detection_column configured%s", prom_key, row_info)
             continue
-        
+
+        # ── Magic expression mode ───────────────────────────────────────────
+        if _is_magic_expression(str(detection_col)):
+            if not MAGIC_FUNCTIONS_AVAILABLE:
+                log.warning(
+                    "PROM %s: detection_column is a magic expression but "
+                    "magic_functions is unavailable%s", prom_key, row_info,
+                )
+                continue
+
+            # Build evaluation context: row + PROM-level virtual columns
+            virtuals = _eval_prom_virtual_columns(prom_config, row)
+            eval_data = dict(row)
+            eval_data.update(virtuals)
+
+            # Pre-fill any remaining %(…) references with None so that
+            # missing columns evaluate to empty/false rather than raising.
+            for m in re.finditer(r'%\(([^)]+)\)', str(detection_col)):
+                col = m.group(1)
+                if col not in eval_data:
+                    eval_data[col] = None
+
+            try:
+                result = evaluate_magic(str(detection_col), eval_data)
+                log.debug(
+                    "PROM %s: detection expression → %s (%s)%s",
+                    prom_key, result, type(result).__name__, row_info,
+                )
+                # Accept Python True or the string "true"
+                if result is True or (isinstance(result, str) and result.lower() == "true"):
+                    log.debug("PROM %s detected via magic expression%s", prom_key, row_info)
+                    return prom_key
+            except Exception as e:
+                log.debug(
+                    "PROM %s: detection expression error: %s%s",
+                    prom_key, e, row_info,
+                )
+            continue  # expression mode — skip the plain-column path
+
+        # ── Plain column-name mode (original behaviour) ─────────────────────
         if detection_col not in row:
             log.debug("PROM %s: detection_column '%s' not found in row%s", prom_key, detection_col, row_info)
             continue
-        
+
         value = row[detection_col]
-        
+
         # IMPORTANT: Check explicitly for None, not just truthiness
         # This allows value 0 (zero) to be valid, which is needed for KOOS/HOOS questions
         if value is not None and str(value).strip() != "":
             log.debug("PROM %s detected: detection_column '%s' = %s%s", prom_key, detection_col, value, row_info)
             return prom_key
         else:
-            log.debug("PROM %s: detection_column '%s' is empty/None%s (value: %s)", 
+            log.debug("PROM %s: detection_column '%s' is empty/None%s (value: %s)",
                      prom_key, detection_col, row_info, repr(value))
-    
+
     # No PROM type detected - log detailed reason
     log.warning("No PROM type detected%s. Checked detection columns:", row_info)
     for prom_key, prom_config in prom_configs.items():
         detection_col = prom_config.get("detection_column")
         if detection_col:
-            if detection_col in row:
+            if _is_magic_expression(str(detection_col)):
+                log.warning("  - %s.detection_column=<magic expression>: not matched", prom_key)
+            elif detection_col in row:
                 value = row[detection_col]
-                log.warning("  - %s.detection_column='%s': value=%s (empty/None)", 
+                log.warning("  - %s.detection_column='%s': value=%s (empty/None)",
                            prom_key, detection_col, repr(value))
             else:
-                log.warning("  - %s.detection_column='%s': column not found in Excel", 
+                log.warning("  - %s.detection_column='%s': column not found in Excel",
                            prom_key, detection_col)
-    
+
     return None
 
 
@@ -505,78 +624,72 @@ def detect_prom_type(row: Dict[str, Any], prom_configs: Dict[str, Any], row_numb
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-# Element order per PROM type (for XSD compliance)
-XSD_ELEMENT_ORDER = {
-    "OKS": [
-        "DATUMINVUL", "HOSPITAL", "UPNNUM", "GENDER", "DATBIRTH",
-        "FUPK", "SIDEPK",
-        "OKS1PK", "OKS2PK", "OKS3PK", "OKS4PK", "OKS5PK", "OKS6PK",
-        "OKS7PK", "OKS8PK", "OKS9PK", "OKS10PK", "OKS11PK", "OKS12PK",
-        "ANKERPK"
-    ],
-    "OHS": [
-        "DATUMINVUL", "HOSPITAL", "UPNNUM", "GENDER", "DATBIRTH",
-        "FUPH", "SIDEP",
-        "OHS1P", "OHS2P", "OHS3P", "OHS4P", "OHS5P", "OHS6P",
-        "OHS7P", "OHS8P", "OHS9P", "OHS10P", "OHS11P", "OHS12P",
-        "OHS1PN", "OHS2PN", "OHS3PN", "OHS4PN", "OHS5PN", "OHS6PN",
-        "OHS7PN", "OHS8PN", "OHS9PN", "OHS10PN", "OHS11PN", "OHS12PN",
-        "ANKERP"
-    ],
-    "KOOS": [
-        "DATUMINVUL", "HOSPITAL", "UPNNUM", "GENDER", "DATBIRTH",
-        "FUPK", "SIDEPK",
-        "KOOS26P", "KOOS25P", "KOOS19P", "KOOS21P", "KOOS09P",
-        "KOOS38P", "KOOS34P"
-    ],
-    "HOOS": [
-        "DATUMINVUL", "HOSPITAL", "UPNNUM", "GENDER", "DATBIRTH",
-        "FUPH", "SIDEP",
-        "HOOS16P", "HOOS28P", "HOOS29P", "HOOS34P", "HOOS35P"
+def _element_order_from_config(prom_config: Dict[str, Any]) -> List[str]:
+    """
+    Derive the XML element order from the PROM config section.
+
+    The order of ``[PROM.<NAME>.<ELEMENT>]`` sub-tables in config.toml
+    IS the element order.  TOML (and Python ≥ 3.7 dicts) preserves
+    insertion order, so no separate ``XSD_ELEMENT_ORDER`` is needed.
+
+    If ``HOSPITAL`` is not explicitly positioned in the config, it is
+    inserted immediately after ``DATUMINVUL`` (matching the LROI XSD
+    convention).
+    """
+    order = [
+        key for key, val in prom_config.items()
+        if isinstance(val, dict) and key not in ("detection_column", "lookup")
     ]
-}
+
+    if "HOSPITAL" not in order:
+        try:
+            idx = order.index("DATUMINVUL") + 1
+        except ValueError:
+            idx = 0
+        order.insert(idx, "HOSPITAL")
+
+    return order
 
 
 def build_questionnaire(
     elements: Dict[str, str],
-    prom_key: str,
+    prom_config: Dict[str, Any],
     hospital: int
 ) -> ET.Element:
     """
-    Build XML questionnaire element in XSD-compliant order.
-    
+    Build XML questionnaire element in the order defined by config.toml.
+
+    Element order is derived from the key order of ``[PROM.<NAME>.*]``
+    sub-tables.  If a ``HOSPITAL`` section is not present in the config
+    it is auto-inserted after ``DATUMINVUL``.
+
     Parameters:
         elements: Extracted XML element values
-        prom_key: PROM type (OKS, OHS, KOOS, HOOS)
+        prom_config: The ``[PROM.<NAME>]`` config section (dict)
         hospital: Hospital number
-    
+
     Returns:
         <questionaire> XML element
-    
-    Example:
-        elements = {"UPNNUM": "P001", "FUPK": "-1", "SIDEPK": "1", ...}
-        q = build_questionnaire(elements, "OKS", 1234)
-        # Returns properly ordered <questionaire> element
     """
     q = ET.Element("questionaire")
-    
+
     # Add HOSPITAL to elements dict (always required)
     elements = elements.copy()  # Don't modify original
     elements["HOSPITAL"] = str(hospital)
-    
-    # Add elements in XSD order
-    element_order = XSD_ELEMENT_ORDER.get(prom_key, [])
-    
+
+    # Add elements in config-defined order
+    element_order = _element_order_from_config(prom_config)
+
     for xml_tag in element_order:
         value = elements.get(xml_tag, "")
-        
+
         # GENDER must always be present (even if empty) for XSD
         if xml_tag == "GENDER":
             el = ET.SubElement(q, xml_tag)
             el.text = value if value and value.lower() not in ["none", "null"] else ""
         elif value:
             _sub(q, xml_tag, value)
-    
+
     return q
 
 
@@ -703,7 +816,7 @@ def convert(
                 continue
             
             # Build questionnaire
-            q = build_questionnaire(elements, prom_key, hospital)
+            q = build_questionnaire(elements, prom_config, hospital)
             questionaires.append(q)
             n_converted += 1
             

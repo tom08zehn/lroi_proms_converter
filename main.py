@@ -179,7 +179,7 @@ def _resolve_output_path(
         return output_arg
     template: str = (
         config.get("defaults", {})
-        .get("xml_file_template", "{yyyy}-{mm}-{dd}_{appname}_output.xml")
+        .get("output_xml_file", "{yyyy}-{mm}-{dd}-{HH}{MM}{SS}_{appname}_output.xml")
     )
     out_dir = config.get("defaults", {}).get("output_dir", ".")
     return str(Path(out_dir) / _expand_template(template))
@@ -357,6 +357,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "xlsx_log_path": None,  # GUI will use config defaults
             "hospital":     config.get("defaults", {}).get("hospital"),
             "config_path":  config_path,
+            "loglevel":     args.loglevel,  # Pass CLI --loglevel to GUI
         }
         gui = ConverterGUI(config=config, prepopulate=prepopulate)
 
