@@ -49,7 +49,7 @@ set /p "merge_target=Merge with branch (blank = don't merge): "
 
 :: ── Summary ─────────────────────────────────────────────────────────────────
 echo.
-echo ─────────────────────────────────────────
+echo =========================================
 if /i "!mode!"=="c" (
     echo  Mode:    CREATE new branch
 ) else (
@@ -60,9 +60,9 @@ echo  Commit:  !msg!
 if "!merge_target!"=="" (
     echo  Merge:   (none)
 ) else (
-    echo  Merge:   !branch! → !merge_target!
+    echo  Merge:   !branch! -- !merge_target!
 )
-echo ─────────────────────────────────────────
+echo =========================================
 echo.
 set "confirm="
 set /p "confirm=Proceed? (y/n) [y]: "
@@ -119,31 +119,37 @@ if !errorlevel! neq 0 (
 for /f "tokens=*" %%a in ("!merge_target!") do set "merge_target=%%a"
 
 if "!merge_target!"=="" (
-    echo [5/5] No merge requested — done.
-) else (
-    echo [5/5] Merging !branch! → !merge_target!...
-    git checkout "!merge_target!"
-    if !errorlevel! neq 0 (
-        echo ERROR: Could not switch to !merge_target!.
-        pause
-        exit /b 1
-    )
-    git merge "!branch!"
-    if !errorlevel! neq 0 (
-        echo ERROR: Merge failed. Resolve conflicts, then run:
-        echo   git add -A ^&^& git commit ^&^& git push
-        pause
-        exit /b 1
-    )
-    git push
-    if !errorlevel! neq 0 (
-        echo ERROR: Push of merged !merge_target! failed.
-        pause
-        exit /b 1
-    )
-    echo Merged and pushed !merge_target!.
+    echo [5/5] No merge requested.
+    goto :done
 )
 
+echo [5/5] Merging !branch! into !merge_target!...
+
+git checkout "!merge_target!"
+if !errorlevel! neq 0 (
+    echo ERROR: Could not switch to !merge_target!.
+    pause
+    exit /b 1
+)
+
+git merge "!branch!"
+if !errorlevel! neq 0 (
+    echo ERROR: Merge failed. Resolve conflicts, then run:
+    echo   git add -A ^&^& git commit ^&^& git push
+    pause
+    exit /b 1
+)
+
+git push origin "!merge_target!"
+if !errorlevel! neq 0 (
+    echo ERROR: Push of merged !merge_target! failed.
+    pause
+    exit /b 1
+)
+
+echo Merged and pushed !merge_target!.
+
+:done
 echo.
 echo =========================================
 echo  Done.
