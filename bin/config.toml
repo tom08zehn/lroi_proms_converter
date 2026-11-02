@@ -191,6 +191,8 @@ column = "OHS Q12"
 [PROM.HOOS]
 detection_column = "1. Going up or down stairs"  # Unique to HOOS/KOOS in the example files
 
+__cb = ")" # Closing round bracket, usage:
+
 [PROM.HOOS.lookup]
 required = true
 join_column = "Admission ID"

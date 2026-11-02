@@ -103,7 +103,7 @@ column = "Could you walk down one flight of stairs?"
 # =============================================================================
 
 [PROM.OHS]
-detection_column = "Oxford Hip Score"
+detection_column = "OHS Total"
 
 [PROM.OHS.lookup]
 required = true
@@ -149,22 +149,22 @@ match = "Left|L"
 replace = "2"
 
 [PROM.OHS.OHS1P]
-column = "OHS Q1"
+column = "Q1 Pain (with bracket in question)"
 
 [PROM.OHS.OHS2P]
-column = "OHS Q2"
+column = "Q2 Trouble washing"
 
 [PROM.OHS.OHS3P]
-column = "OHS Q3"
+column = "Q3 Transport trouble"
 
 [PROM.OHS.OHS4P]
-column = "OHS Q4"
+column = "Q4 Socks/stockings"
 
 [PROM.OHS.OHS5P]
-column = "OHS Q5"
+column = "Q5 Shopping alone"
 
 [PROM.OHS.OHS6P]
-column = "OHS Q6"
+column = "Q6 Walking duration"
 
 [PROM.OHS.OHS7P]
 column = "OHS Q7"

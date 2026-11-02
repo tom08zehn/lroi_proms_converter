@@ -1,0 +1,124 @@
+2026-11-02 16:25:17  INFO      Log file: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\2026-11-02-162516_lroi_converter.log
+2026-11-02 16:25:17  INFO      Excel log file: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\2026-11-02-162516_lroi_converter.xlsx (double-click to open in Excel)
+2026-11-02 16:25:17  INFO      Loading LUT: input\demographics.xlsx
+2026-11-02 16:25:17  INFO      LUT loaded: 77 records indexed by 'Admission ID' (0 skipped)
+2026-11-02 16:25:17  INFO      Processing XLS: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\input\test_eq5d5l.xlsx
+2026-11-02 16:25:17  INFO      Detected PROM type: EQ5D5L
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93001
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93002
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93004
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93005
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93006
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93007
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93008
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93009
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93011
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93012
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93013
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93014
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93015
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93018
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93019
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93020
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93021
+2026-11-02 16:25:17  INFO      Converted EQ5D5L questionnaire: UPNNUM=93022
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:17  WARNING   No PROM type detected (Excel row 27). Checked detection columns:
+2026-11-02 16:25:17  WARNING     - OKS.detection_column='Oxford Knee Score': column not found in Excel
+2026-11-02 16:25:17  WARNING     - OHS.detection_column='Oxford Hip Score': column not found in Excel
+2026-11-02 16:25:17  WARNING     - HOOS.detection_column='1. Going up or down stairs': column not found in Excel
+2026-11-02 16:25:17  WARNING     - KOOS.detection_column='1. How severe is your knee stiffness after first wakening in the morning?': column not found in Excel
+2026-11-02 16:25:17  WARNING     - EQ5D5L.detection_column='EQ-5D-5L Score': value=None (empty/None)
+2026-11-02 16:25:17  WARNING   No PROM type detected for Excel row 27 (skipped)
+2026-11-02 16:25:17  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  ERROR     No LUT record found for Admission ID='99996'
+2026-11-02 16:25:18  INFO      Converted EQ5D5L questionnaire: UPNNUM=93028
+2026-11-02 16:25:18  INFO      Processing XLS: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\input\test_hoos.xlsx
+2026-11-02 16:25:18  INFO      Detected PROM type: HOOS
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90001
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90002
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90003
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90006
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90007
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90010
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90011
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  ERROR     No LUT record found for Admission ID='99999'
+2026-11-02 16:25:18  INFO      Converted HOOS questionnaire: UPNNUM=90014
+2026-11-02 16:25:18  WARNING   No PROM type detected (Excel row 16). Checked detection columns:
+2026-11-02 16:25:18  WARNING     - OKS.detection_column='Oxford Knee Score': column not found in Excel
+2026-11-02 16:25:18  WARNING     - OHS.detection_column='Oxford Hip Score': column not found in Excel
+2026-11-02 16:25:18  WARNING     - HOOS.detection_column='1. Going up or down stairs': value=None (empty/None)
+2026-11-02 16:25:18  WARNING     - KOOS.detection_column='1. How severe is your knee stiffness after first wakening in the morning?': column not found in Excel
+2026-11-02 16:25:18  WARNING     - EQ5D5L.detection_column='EQ-5D-5L Score': column not found in Excel
+2026-11-02 16:25:18  WARNING   No PROM type detected for Excel row 16 (skipped)
+2026-11-02 16:25:18  INFO      Processing XLS: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\input\test_koos.xlsx
+2026-11-02 16:25:18  INFO      Detected PROM type: KOOS
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91001
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91002
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91003
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91006
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91007
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91010
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91011
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91014
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91015
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  ERROR     No LUT record found for Admission ID='99998'
+2026-11-02 16:25:18  INFO      Converted KOOS questionnaire: UPNNUM=91018
+2026-11-02 16:25:18  WARNING   No PROM type detected (Excel row 20). Checked detection columns:
+2026-11-02 16:25:18  WARNING     - OKS.detection_column='Oxford Knee Score': column not found in Excel
+2026-11-02 16:25:18  WARNING     - OHS.detection_column='Oxford Hip Score': column not found in Excel
+2026-11-02 16:25:18  WARNING     - HOOS.detection_column='1. Going up or down stairs': column not found in Excel
+2026-11-02 16:25:18  WARNING     - KOOS.detection_column='1. How severe is your knee stiffness after first wakening in the morning?': value=None (empty/None)
+2026-11-02 16:25:18  WARNING     - EQ5D5L.detection_column='EQ-5D-5L Score': column not found in Excel
+2026-11-02 16:25:18  WARNING   No PROM type detected for Excel row 20 (skipped)
+2026-11-02 16:25:18  INFO      Processing XLS: C:\Users\fischert\OneDrive - Zimmer Biomet\Documents\Dev\Python\LROI PROMs Converter NL\lroi_converter\bin\input\test_oks.xlsx
+2026-11-02 16:25:18  INFO      Detected PROM type: OKS
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92001
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92002
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92003
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92006
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92007
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92010
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92011
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92014
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92015
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  WARNING   Row skipped: missing UPNNUM
+2026-11-02 16:25:18  ERROR     No LUT record found for Admission ID='99997'
+2026-11-02 16:25:18  INFO      Converted OKS questionnaire: UPNNUM=92018
+2026-11-02 16:25:18  WARNING   No PROM type detected (Excel row 20). Checked detection columns:
+2026-11-02 16:25:18  WARNING     - OKS.detection_column='Oxford Knee Score': value=None (empty/None)
+2026-11-02 16:25:18  WARNING     - OHS.detection_column='Oxford Hip Score': column not found in Excel
+2026-11-02 16:25:18  WARNING     - HOOS.detection_column='1. Going up or down stairs': column not found in Excel
+2026-11-02 16:25:18  WARNING     - KOOS.detection_column='1. How severe is your knee stiffness after first wakening in the morning?': column not found in Excel
+2026-11-02 16:25:18  WARNING     - EQ5D5L.detection_column='EQ-5D-5L Score': column not found in Excel
+2026-11-02 16:25:18  WARNING   No PROM type detected for Excel row 20 (skipped)
+2026-11-02 16:25:18  INFO      Conversion complete: 47 questionnaires converted
+2026-11-02 16:25:18  WARNING   34 questionnaires skipped
+2026-11-02 16:25:18  INFO      XML written to: 2026-11-02-162516_lroi_converter.xml

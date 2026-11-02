@@ -633,145 +633,184 @@ MAGIC_FUNCTIONS: Dict[str, Callable] = {
 # ──────────────────────────────────────────────────────────────────────────────
 # Parser & Evaluator
 # ──────────────────────────────────────────────────────────────────────────────
+#
+# Grammar (behavior cloned from ZBEdgeUtils.js `magic()`, see notes below):
+#
+#   $NAME(arg1,arg2,...)   function call, NAME must be whitelisted in MAGIC_FUNCTIONS
+#   %(name)                variable lookup; everything between the brackets is the key
+#   #(json)                JSON parse; pieces are evaluated, re-joined with "," and parsed
+#   anything else          static string
+#
+# An expression is only recognised if it fills the *entire* string/argument
+# (surrounding whitespace is ignored). Text mixed with expressions, such as
+# "Hello %(name)", is a static string and is NOT interpolated.
+#
+# Parentheses are counted character by character, so nesting is unlimited up to
+# NESTING_LIMIT. Parentheses MUST be balanced everywhere (also inside variable
+# names and plain arguments); unbalanced input raises MagicSyntaxError.
+#
+# Differences to the JavaScript implementation (deliberate):
+#   - malformed input raises an error instead of silently calling the function
+#     with missing arguments
+#   - $FOO() passes NO arguments (JS passes one empty string)
+#   - #(...) returns None for invalid JSON (JS returns the unparsed string)
+#   - no %(name,fallback) and no dot syntax in variable names
+#   - NESTING_LIMIT is enforced (JS has none)
+#   - line breaks (plus adjacent whitespace) at the start/end of a plain argument
+#     are removed. This keeps multi-line config values working.
 
-def _interpolate_variables(expression: str, row_data: Dict[str, Any]) -> str:
-    """Replace %(column_name) with actual values from row_data."""
-    # Find all %(...)
-    pattern = r'%\(([^)]+)\)'
-    
-    def replace_var(match):
-        col_name = match.group(1)
-        if col_name not in row_data:
-            raise ValueError(f"Column not found: {col_name}")
-        value = row_data[col_name]
-        # Use _to_string helper (handles datetime, bool, None, etc.)
-        return _to_string(value)
-    
-    return re.sub(pattern, replace_var, expression)
+# Maximum nesting depth of expressions, e.g. $A($B($C(x))) has depth 3.
+NESTING_LIMIT = 32
 
-def _parse_function_call(expression: str, row_data: Dict[str, Any]) -> Any:
-    """Parse and evaluate a function call."""
-    # Check if it's a function call
-    func_pattern = r'^(#|\$[A-Z_]+)\((.*)\)$'
-    match = re.match(func_pattern, expression, re.DOTALL)
-    
-    if not match:
-        # Not a function call, return as-is
-        return expression
-    
-    func_name = match.group(1)
-    args_str = match.group(2)
-    
-    # Special handling for # (JSON parse)
-    if func_name == '#':
-        func_key = '#'
-    else:
-        # Remove $ prefix
-        func_key = func_name[1:]
-    
-    if func_key not in MAGIC_FUNCTIONS:
-        raise ValueError(f"Unknown function: {func_name}")
-    
-    # Parse arguments (split by comma, respecting nested calls)
-    args = _parse_arguments(args_str, row_data)
-    
-    # Execute function
-    func = MAGIC_FUNCTIONS[func_key]
-    try:
-        return func(*args)
-    except TypeError as e:
-        raise ValueError(f"{func_name}: {str(e)}")
+# Start of an expression: "%(", "#(" or "$NAME("
+_HEAD = re.compile(r'(?:%|#|\$([A-Z_]+))\(')
 
-def _parse_arguments(args_str: str, row_data: Dict[str, Any]) -> List[Any]:
-    """Parse comma-separated arguments, handling nested function calls."""
-    if not args_str.strip():
+_LEADING_BREAK = re.compile(r'^\s*[\r\n]\s*')
+_TRAILING_BREAK = re.compile(r'\s*[\r\n]\s*$')
+
+
+class MagicSyntaxError(ValueError):
+    """Malformed magic expression (subclass of ValueError)."""
+
+
+def _trim_linebreaks(text: str) -> str:
+    """Remove leading/trailing whitespace only if it contains a line break.
+
+    Spaces/tabs on a single line are significant and preserved.
+    """
+    return _TRAILING_BREAK.sub('', _LEADING_BREAK.sub('', text))
+
+
+def _find_close(text: str, open_idx: int) -> int:
+    """Return the index of the ')' matching the '(' at open_idx, or -1."""
+    level = 0
+    for i in range(open_idx, len(text)):
+        c = text[i]
+        if c == '(':
+            level += 1
+        elif c == ')':
+            level -= 1
+            if level == 0:
+                return i
+    return -1
+
+
+def _split_arguments(inner: str) -> List[str]:
+    """Split on commas at parenthesis level 0. Whitespace is preserved.
+
+    Empty input means "no arguments"; otherwise an empty piece is a valid
+    (empty string) argument. `inner` is always balanced here.
+    """
+    if inner == "":
         return []
-    
-    args = []
-    current_arg = ""
-    depth = 0
-    
-    for char in args_str:
-        if char == '(' :
-            depth += 1
-            current_arg += char
-        elif char == ')':
-            depth -= 1
-            current_arg += char
-        elif char == ',' and depth == 0:
-            # End of argument
-            args.append(current_arg.strip())
-            current_arg = ""
-        else:
-            current_arg += char
-    
-    # Add last argument (empty string is a valid argument)
-    args.append(current_arg.strip())
-    
-    # Evaluate each argument (could be nested function call or variable)
-    evaluated_args = []
-    for arg in args:
-        # v1.5.0: If the entire argument is a pure variable reference %(name),
-        # return the raw value to preserve its type (bool, int, etc.).
-        # Without this, boolean False becomes the string "false" which is
-        # truthy, breaking $IF(%(__is_hip), ..., #(false)) patterns.
-        var_match = re.fullmatch(r'%\(([^)]+)\)', arg)
-        if var_match:
-            col_name = var_match.group(1)
-            if col_name in row_data:
-                evaluated_args.append(row_data[col_name])
-                continue
-        # Evaluate the argument. Do NOT call _interpolate_variables here —
-        # evaluate() already handles %(…) at the right level, preserving
-        # types for pure variable references even inside nested calls.
-        arg = evaluate(arg, row_data)
-        evaluated_args.append(arg)
-    
-    return evaluated_args
+    pieces: List[str] = []
+    level = 0
+    start = 0
+    for i, c in enumerate(inner):
+        if c == '(':
+            level += 1
+        elif c == ')':
+            level -= 1
+        elif c == ',' and level == 0:
+            pieces.append(inner[start:i])
+            start = i + 1
+    pieces.append(inner[start:])
+    return pieces
+
+
+def _magic_join_string(value: Any) -> str:
+    """Approximate JavaScript Array.join string coercion for the # wrapper."""
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, dict):
+        return "[object Object]"
+    if isinstance(value, (list, tuple)):
+        return ",".join(_magic_join_string(item) for item in value)
+    return _to_string(value)
+
+
+def _evaluate_expression(text: str, row_data: Dict[str, Any], depth: int) -> Any:
+    """Evaluate `text`, which must start with an expression head (already trimmed)."""
+    if depth >= NESTING_LIMIT:
+        raise MagicSyntaxError(f"Expression nesting exceeds NESTING_LIMIT ({NESTING_LIMIT}): {text[:60]}")
+
+    head = _HEAD.match(text)
+    open_idx = head.end() - 1
+    close_idx = _find_close(text, open_idx)
+    if close_idx == -1:
+        raise MagicSyntaxError(f"Unbalanced parentheses (missing ')'): {text}")
+    if close_idx != len(text) - 1:
+        raise MagicSyntaxError(
+            f"Unexpected text after closing parenthesis (or unbalanced ')'): {text}")
+
+    inner = text[open_idx + 1:close_idx]
+    prefix = text[:open_idx]
+
+    # %(name): the whole content is the variable name (whitespace preserved)
+    if prefix == '%':
+        if inner not in row_data:
+            raise ValueError(f"Column not found: {inner}")
+        return row_data[inner]  # raw value, type is preserved
+
+    args = [_evaluate_piece(p, row_data, depth + 1) for p in _split_arguments(inner)]
+
+    # #(json): re-join the evaluated pieces (commas inside JSON were split above)
+    if prefix == '#':
+        return func_json_parse(",".join(_magic_join_string(a) for a in args))
+
+    # $NAME(args)
+    func_key = prefix[1:]
+    if func_key not in MAGIC_FUNCTIONS:
+        raise ValueError(f"Unknown function: {prefix}")
+    try:
+        return MAGIC_FUNCTIONS[func_key](*args)
+    except TypeError as e:
+        raise ValueError(f"{prefix}: {str(e)}")
+
+
+def _evaluate_piece(piece: str, row_data: Dict[str, Any], depth: int) -> Any:
+    """Evaluate one argument: a whole expression, otherwise a static string."""
+    stripped = piece.strip()
+    if _HEAD.match(stripped):
+        return _evaluate_expression(stripped, row_data, depth)
+    return _trim_linebreaks(piece)
+
 
 def evaluate(expression: str, row_data: Dict[str, Any]) -> Any:
     """
     Parse and evaluate a magic function expression.
-    
+
     Args:
         expression: Expression string (e.g., "$UPPER(%(name))")
         row_data: Dictionary of column values
-    
+
     Returns:
-        Evaluated result
-    
+        Evaluated result. Values read from row_data are never evaluated again.
+
+    Raises:
+        MagicSyntaxError (ValueError): unbalanced parentheses, trailing text,
+            nesting deeper than NESTING_LIMIT
+        ValueError: unknown function, missing column, wrong arguments
+
     Examples:
         >>> evaluate("$UPPER(%(name))", {"name": "john"})
         'JOHN'
-        
+
         >>> evaluate("$IF($GT(%(age),18),adult,minor)", {"age": 25})
         'adult'
+
+        >>> evaluate("%(foo (bar))", {"foo (bar)": 1})
+        1
     """
-    expression = expression.strip()
-    
-    # Check if it's a function call
-    if expression.startswith(('$', '#')):
-        return _parse_function_call(expression, row_data)
-    
-    # Check if it contains variables
-    if '%(' in expression:
-        # v1.5.0: If the entire expression is a pure variable reference,
-        # return the raw value to preserve its type (bool, int, etc.).
-        var_match = re.fullmatch(r'%\(([^)]+)\)', expression)
-        if var_match:
-            col_name = var_match.group(1)
-            if col_name in row_data:
-                return row_data[col_name]
-        return _interpolate_variables(expression, row_data)
-    
-    # Plain string
-    return expression
+    return _evaluate_piece(expression, row_data, 0)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Public API
 # ──────────────────────────────────────────────────────────────────────────────
 
-__all__ = ['evaluate', 'MAGIC_FUNCTIONS']
+__all__ = ['evaluate', 'MAGIC_FUNCTIONS', 'NESTING_LIMIT', 'MagicSyntaxError']
 
 if __name__ == '__main__':
     # Simple test
