@@ -21,20 +21,23 @@ Magic functions provide safe, declarative calculations in config.toml without ar
 
 ## Syntax
 
-### Variable Interpolation
+### Variable References
 ```toml
-%(column_name)  # Insert value from current row
+%(column_name)  # Insert a value from the current row
 ```
+The complete contents between `(` and its matching `)` are the dictionary key. Key whitespace is significant. Parentheses in a key must be balanced.
 
 ### Function Calls
 ```toml
-$FUNCTION_NAME(arg1,arg2,arg3)  # No spaces after commas!
+$FUNCTION_NAME(arg1,arg2,arg3)
 ```
+Commas at the outer argument level separate arguments. Nested function and variable references are evaluated recursively. Argument whitespace on a single line is preserved; use a variable for values containing commas.
 
 ### Nested Functions
 ```toml
 $IF($GT(%(age),18),adult,minor)
 ```
+Only a complete expression is evaluated. Text mixed with a reference (for example, `Hello %(name)`) is treated as a literal string.
 
 ### Multi-Line (Recommended for Readability)
 ```toml
@@ -45,35 +48,27 @@ $IF(
   minor
 )
 """
-# Leading/trailing whitespace auto-trimmed per line
+# The converter trims each line; line breaks around argument values are also ignored.
 ```
 
 ---
 
-## ⚠️ Critical: Comma Spacing
+## Argument Spacing
 
-**WRONG:**
+Whitespace in a single-line literal argument is preserved:
 ```toml
-$FUNC(arg1, arg2, arg3)  # Spaces after commas = broken!
-# Parser sees: ["arg1", " arg2", " arg3"]
-#                        ^        ^
-#                   Leading spaces!
+$CONCAT(hello, ,world)  # Produces "hello world"
+$FUNC(arg1, arg2)       # Second argument is " arg2"
 ```
 
-**CORRECT:**
+Spaces around a complete nested expression are ignored, so this works:
 ```toml
-# Single-line: No spaces
-$FUNC(arg1,arg2,arg3)
-
-# Multi-line: Spaces OK (trimmed)
-"""
-$FUNC(
-  arg1,
-  arg2,
-  arg3
-)
-"""
+$FOO( %(name) )
 ```
+
+Unbalanced parentheses are rejected with an error. Quoted arguments are not supported; use a variable when a value contains a comma.
+
+---
 
 ---
 
@@ -124,12 +119,13 @@ column = "$FIRST_N(%(__period),%(Period),-1)"
 ### JSON & Data
 
 #### `#(json_string)`
-Parse JSON string to object/array.
+Parse the evaluated argument text as JSON. Argument pieces are evaluated as complete expressions, then re-joined with commas before JSON parsing. This allows a variable or a nested function to provide JSON text.
 ```toml
 __data = "#(%(json_field))"
+__array = "#([1,$PLUS(1,1),3])"
 __value = "$GET(%(__data),key)"
 ```
-**Returns:** Parsed object/array or None if invalid JSON
+Magic expressions embedded inside a larger JSON fragment are not evaluated. Invalid JSON returns `None`.
 
 ---
 

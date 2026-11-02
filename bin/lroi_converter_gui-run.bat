@@ -1,1 +1,1 @@
-lroi_converter.exe --input input --lut input\demographics.xlsx --loglevel DEBUG --gui --run
+lroi_converter.exe --input input --lut input\demographics.xlsx --loglevel INFO --gui --run
