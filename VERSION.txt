@@ -1,7 +1,1 @@
 1.5.1
-
-# Changelog
-
-## 1.5.1
-
-- updated magic functions: now supporting parenthesis in column names: `%(1. How are you (1 = good, 2 = bad)?)`

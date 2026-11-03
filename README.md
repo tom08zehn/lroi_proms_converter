@@ -823,6 +823,9 @@ lroi_converter/
 
 ## Version History
 
+**v1.5.1** (2026-11-02)
+- Updated magic expressions: now supporting parenthesis in column names: `%(1. How are you (1 = good, 2 = bad)?)`
+
 **v1.5.0** (2026-06-01)
 - **Magic expression detection:** `detection_column` now supports magic expressions for multi-condition PROM detection
 - **PROM-level virtual columns:** Define `__variables` at `[PROM.<NAME>]` level, reusable across detection and all XML elements
@@ -851,20 +854,8 @@ lroi_converter/
 - Added output XML file configuration
 - Added HOOS and KOOS support
 
-See [VERSION.txt](VERSION.txt) for complete changelog.
-
 ---
 
 ## License
 
-[Your license here]
-
----
-
-## Contact
-
-[Your contact information here]
-
----
-
-**Last Updated:** v1.5.1 (2026-11-02)
+MIT
